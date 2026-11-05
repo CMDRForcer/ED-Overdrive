@@ -47,6 +47,7 @@ public partial class MainWindow : Window
             "backups" => BackupsPage.Build(this),
             "modes" => ModesPage.Build(this),
             "filters" => FilterPage.Build(this),
+            "graphics" => GraphicsPage.Build(this),
             "check" => CheckPage.Build(this),
             "presets" => PresetsPage.Build(this),
             "settings" => SettingsPage.Build(this),

@@ -322,7 +322,7 @@ public sealed partial class EliteCheck(GameInstall game, string graphicsFolder)
         ini.Save(ReShadeIni);
     }
 
-    static string? XmlValue(string path, string tag)
+    public static string? XmlValue(string path, string tag)
     {
         if (!File.Exists(path)) {
             return null;
@@ -332,7 +332,7 @@ public sealed partial class EliteCheck(GameInstall game, string graphicsFolder)
     }
 
     // Only the value changes, the rest of Frontier's file stays as it is.
-    static void SetXml(string path, string tag, string value)
+    public static void SetXml(string path, string tag, string value)
     {
         var text = File.ReadAllText(path);
         var changed = Regex.Replace(text, $"<{tag}>.*?</{tag}>", $"<{tag}>{value}</{tag}>");
