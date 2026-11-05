@@ -38,11 +38,14 @@ static class BackupsPage
         return page;
     }
 
-    // Everything the tool may change later: ReShade, its preset and Elite's graphics options.
+    // Everything the tool may change later: ReShade, its presets (the user's and the filter set's) and Elite's graphics options.
     public static IEnumerable<string> FilesToSave(GameInstall game)
     {
         yield return Path.Combine(game.Folder, "ReShade.ini");
-        foreach (var preset in Directory.EnumerateFiles(game.Folder, "*Preset*.ini")) {
+        yield return Path.Combine(game.Folder, "ReShade2.ini");
+        var presets = Directory.EnumerateFiles(game.Folder, "*Preset*.ini")
+            .Concat(Directory.EnumerateFiles(game.Folder, "GenFrame_*.ini"));
+        foreach (var preset in presets.Distinct(StringComparer.OrdinalIgnoreCase)) {
             yield return preset;
         }
 
