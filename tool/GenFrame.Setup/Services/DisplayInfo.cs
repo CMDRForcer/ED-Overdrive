@@ -40,6 +40,35 @@ public static class DisplayInfo
         }
     }
 
+    // Refresh rate of the main display in Hz. Null when Windows does not say (it reports 0 or 1 for "default").
+    public static int? RefreshRate()
+    {
+        var mode = new DevMode { Size = (ushort)Marshal.SizeOf<DevMode>() };
+        return EnumDisplaySettingsW(null, CurrentSettings, ref mode) && mode.DisplayFrequency > 1 ? (int)mode.DisplayFrequency : null;
+    }
+
+    const int CurrentSettings = -1;
+
+    // DEVMODEW for a display; only Size and DisplayFrequency are used.
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    struct DevMode
+    {
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string DeviceName;
+        public ushort SpecVersion, DriverVersion, Size, DriverExtra;
+        public uint Fields;
+        public int PositionX, PositionY;
+        public uint DisplayOrientation, DisplayFixedOutput;
+        public short Color, Duplex, YResolution, TTOption, Collate;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string FormName;
+        public ushort LogPixels;
+        public uint BitsPerPel, PelsWidth, PelsHeight, DisplayFlags, DisplayFrequency;
+        public uint IcmMethod, IcmIntent, MediaType, DitherType, Reserved1, Reserved2, PanningWidth, PanningHeight;
+    }
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    static extern bool EnumDisplaySettingsW(string? deviceName, int modeNumber, ref DevMode mode);
+
     const uint OnlyActivePaths = 2;
     const int GetAdvancedColorInfo = 9;
     const int ModeInfoSize = 64;

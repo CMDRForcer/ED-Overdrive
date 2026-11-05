@@ -34,12 +34,17 @@ static class Ui
     // One line of a list: label left, status (or a button) right.
     public static Border Row(string label, UIElement right)
     {
+        var text = Text(label);
+        text.VerticalAlignment = VerticalAlignment.Center;
+        return Row(text, right);
+    }
+
+    public static Border Row(UIElement left, UIElement right)
+    {
         var grid = new Grid();
         grid.ColumnDefinitions.Add(new ColumnDefinition());
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        var text = Text(label);
-        text.VerticalAlignment = VerticalAlignment.Center;
-        grid.Children.Add(text);
+        grid.Children.Add(left);
         Grid.SetColumn(right, 1);
         grid.Children.Add(right);
         return new Border {

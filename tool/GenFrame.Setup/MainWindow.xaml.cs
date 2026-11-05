@@ -47,7 +47,7 @@ public partial class MainWindow : Window
             "backups" => BackupsPage.Build(this),
             "modes" => PlaceholderPage.Build("Schnellwahl", "DLAA + FG, nur DLAA, nur FG, aus – frei kombinierbar."),
             "filters" => FilterPage.Build(this),
-            "check" => PlaceholderPage.Build("Elite-Check", "Supersampling, Checkerboard, doppelte Limiter, doppelte Schärfe, alte Test-Builds."),
+            "check" => CheckPage.Build(this),
             "presets" => PlaceholderPage.Build("Presets", "DLAA- und FG-Presets im Treiberprofil von Elite wählen und aktive Presets aus sl.log anzeigen."),
             "settings" => PlaceholderPage.Build("Einstellungen", "GEN·FRAME-Einstellungen bei geschlossenem Spiel bearbeiten."),
             "diagnose" => PlaceholderPage.Build("Diagnose", "Logs, Dumps und Einstellungen als Zip sammeln."),

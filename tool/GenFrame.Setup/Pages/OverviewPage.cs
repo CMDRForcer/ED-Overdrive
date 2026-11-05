@@ -41,8 +41,8 @@ static class OverviewPage
         // until Phase 3) shows the picture: black screen on 03.11.2026.
         var renodxOn = components.Any(c => c.Name == "RenoDX" && c.State == ComponentState.Installed);
         var iniPath = System.IO.Path.Combine(game.Folder, "ReShade.ini");
-        var fgOn = System.IO.File.Exists(iniPath) && IniFile.Load(iniPath).Get("EDAA", "fg_generate") == "1";
-        if (renodxOn && fgOn) {
+        var d3d12Output = System.IO.File.Exists(iniPath) && IniFile.Load(iniPath).Get("EDAA", "fg_present_test") == "1";
+        if (renodxOn && d3d12Output) {
             page.Children.Add(Ui.Row("RenoDX ist an, zusammen mit Frame Generation",
                 Ui.Text("schwarzes Bild – RenoDX im Overlay unter „Add-ons“ abschalten", Ui.Brush("WarnBrush"))));
         }
