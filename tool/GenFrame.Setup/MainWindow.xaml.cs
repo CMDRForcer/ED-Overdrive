@@ -45,12 +45,12 @@ public partial class MainWindow : Window
         PageHost.Content = page switch {
             "overview" => OverviewPage.Build(this),
             "backups" => BackupsPage.Build(this),
-            "modes" => PlaceholderPage.Build("Schnellwahl", "DLAA + FG, nur DLAA, nur FG, aus – frei kombinierbar."),
+            "modes" => ModesPage.Build(this),
             "filters" => FilterPage.Build(this),
             "check" => CheckPage.Build(this),
-            "presets" => PlaceholderPage.Build("Presets", "DLAA- und FG-Presets im Treiberprofil von Elite wählen und aktive Presets aus sl.log anzeigen."),
-            "settings" => PlaceholderPage.Build("Einstellungen", "GEN·FRAME-Einstellungen bei geschlossenem Spiel bearbeiten."),
-            "diagnose" => PlaceholderPage.Build("Diagnose", "Logs, Dumps und Einstellungen als Zip sammeln."),
+            "presets" => PresetsPage.Build(this),
+            "settings" => SettingsPage.Build(this),
+            "diagnose" => DiagnosePage.Build(this),
             _ => null,
         };
     }

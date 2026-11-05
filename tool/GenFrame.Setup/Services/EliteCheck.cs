@@ -264,12 +264,21 @@ public sealed partial class EliteCheck(GameInstall game, string graphicsFolder)
                 $"sl.log meldet {hangs}-mal „Wait on gpu fence timed out“. Die GPU hing, ein Absturz folgt meist."));
         }
 
-        var preset = streamline.Select(l => FgPresetLine().Match(l)).LastOrDefault(m => m.Success);
-        if (preset != null && int.TryParse(preset.Groups[1].Value, out var value) && value is >= 1 and <= 26) {
-            var applied = preset.Groups[2].Value == "Yes" ? "angewendet" : "nicht angewendet";
-            var latest = preset.Groups[3].Value == "Yes" ? "das neueste" : "nicht das neueste";
-            results.Add(new(GroupFg, "FG-Preset", CheckStatus.Info, $"{(char)('A' + value - 1)} per Treiber-Override, {applied}, {latest}."));
+        if (ActiveFgPreset(game.Folder) is { } preset) {
+            var applied = preset.Applied ? "angewendet" : "nicht angewendet";
+            var latest = preset.Latest ? "das neueste" : "nicht das neueste";
+            results.Add(new(GroupFg, "FG-Preset", CheckStatus.Info, $"{preset.Letter} per Treiber-Override, {applied}, {latest}."));
         }
+    }
+
+    // What the driver reported for frame generation in the last session.
+    public static (char Letter, bool Applied, bool Latest)? ActiveFgPreset(string gameFolder)
+    {
+        var match = SharedLines(Path.Combine(gameFolder, "sl.log")).Select(l => FgPresetLine().Match(l)).LastOrDefault(m => m.Success);
+        if (match == null || !int.TryParse(match.Groups[1].Value, out var value) || value is < 1 or > 26) {
+            return null;
+        }
+        return ((char)('A' + value - 1), match.Groups[2].Value == "Yes", match.Groups[3].Value == "Yes");
     }
 
     void CheckFiles(List<CheckResult> results)
