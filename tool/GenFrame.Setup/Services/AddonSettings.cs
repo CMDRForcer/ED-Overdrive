@@ -24,7 +24,7 @@ public static class AddonSettings
     public static readonly AddonSetting[] All = [
         new("Frame Generation", "fg_hud_protect", "HUD ruhig halten", "Das Cockpit-HUD verschmiert nicht in generierten Bildern.", SettingKind.Toggle, "1"),
         new("Frame Generation", "fg_fps_limit", "Bildlimit (angezeigte FPS, 0 = aus)", "Knapp unter der Bildwiederholrate, zum Beispiel 140 bei 144 Hz. Keinen zweiten Limiter nutzen.", SettingKind.Whole, "140", 0, 360),
-        new("Kantenglättung", "dlss_preset", "DLAA-Modell", "Das Modell, das GEN·FRAME bei NVIDIA anfordert.", SettingKind.Choice, "11", Choices: DlaaModels),
+        new("Kantenglättung", "dlss_preset", "DLAA-Modell", "Das Modell, das EDAA bei NVIDIA anfordert.", SettingKind.Choice, "11", Choices: DlaaModels),
         new("Kantenglättung", "taa_before_hud", "Vor dem HUD glätten", "An: FG-HUD-Schutz voll, das HUD bleibt aber ungeglättet. Aus: HUD geglättet, FG-HUD-Schutz schwächer.", SettingKind.Toggle, "1"),
         new("Hochskalieren (nur unter 1,0 Supersampling)", "game_upscale", "Hochskalieren dem Spiel überlassen", "", SettingKind.Toggle, "0"),
         new("Hochskalieren (nur unter 1,0 Supersampling)", "upscale_sharpness", "Schärfe bei TAA-Hochskalierung", "", SettingKind.Real, "0.5", 0, 1),

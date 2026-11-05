@@ -17,7 +17,7 @@ static class ModesPage
             return page;
         }
         if (!File.Exists(Path.Combine(game.Folder, "ReShade.ini"))) {
-            page.Children.Add(Ui.Muted("GEN·FRAME ist noch nicht eingerichtet. Bitte zuerst unter „Übersicht“ installieren."));
+            page.Children.Add(Ui.Muted("EDAA ist noch nicht eingerichtet. Bitte zuerst unter „Übersicht“ installieren."));
             return page;
         }
 

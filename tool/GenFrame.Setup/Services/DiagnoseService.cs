@@ -53,7 +53,7 @@ public sealed class DiagnoseService(GameInstall game, string graphicsFolder, Act
     string Report()
     {
         var text = new StringBuilder();
-        text.AppendLine($"GEN·FRAME Einrichtung, Diagnose vom {DateTime.Now:dd.MM.yyyy HH:mm}");
+        text.AppendLine($"ED-Overdrive, Diagnose vom {DateTime.Now:dd.MM.yyyy HH:mm}");
         text.AppendLine($"Windows {Environment.OSVersion.Version}");
         text.AppendLine($"Spielordner: {game.Folder} ({game.Store})");
         text.AppendLine($"Windows-HDR: {DisplayInfo.HdrEnabled()?.ToString() ?? "unbekannt"}, Hauptmonitor: {DisplayInfo.RefreshRate()?.ToString() ?? "?"} Hz");

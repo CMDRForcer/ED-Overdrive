@@ -18,7 +18,7 @@ static class SettingsPage
             return page;
         }
         if (!File.Exists(Path.Combine(game.Folder, "ReShade.ini"))) {
-            page.Children.Add(Ui.Muted("GEN·FRAME ist noch nicht eingerichtet. Bitte zuerst unter „Übersicht“ installieren."));
+            page.Children.Add(Ui.Muted("EDAA ist noch nicht eingerichtet. Bitte zuerst unter „Übersicht“ installieren."));
             return page;
         }
 
@@ -40,7 +40,7 @@ static class SettingsPage
             Ui.Button("Verwerfen", (_, _) => window.Refresh()),
             Ui.Button("Auf Standard", (_, _) => {
                 var question = "Alle Werte dieser Seite auf Standard setzen? Die Schnellwahl bleibt, vorher wird ein Backup angelegt.";
-                if (MessageBox.Show(window, question, "GEN·FRAME Einrichtung", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes) {
+                if (MessageBox.Show(window, question, "ED-Overdrive", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes) {
                     Save(window, game, "Vor Standardwerten", AddonSettings.All.ToDictionary(s => s.Key, s => s.Default));
                 }
             })));

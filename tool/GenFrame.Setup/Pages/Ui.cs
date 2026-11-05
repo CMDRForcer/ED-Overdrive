@@ -65,5 +65,5 @@ static class Ui
     }
 
     public static void Error(Exception e) =>
-        MessageBox.Show(e.Message, "GEN·FRAME Einrichtung", MessageBoxButton.OK, MessageBoxImage.Warning);
+        MessageBox.Show(e.Message, "ED-Overdrive", MessageBoxButton.OK, MessageBoxImage.Warning);
 }

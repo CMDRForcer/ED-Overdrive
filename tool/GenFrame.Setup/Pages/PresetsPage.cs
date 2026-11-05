@@ -15,7 +15,7 @@ static class PresetsPage
     {
         var page = new StackPanel();
         page.Children.Add(Ui.Heading("Presets"));
-        page.Children.Add(Ui.Muted("Das DLAA-Modell fordert GEN·FRAME selbst an. Das FG-Preset legt der Treiber fest, " +
+        page.Children.Add(Ui.Muted("Das DLAA-Modell fordert EDAA selbst an. Das FG-Preset legt der Treiber fest, " +
             "deshalb schreibt die App es ins Treiberprofil von Elite, nur auf Knopfdruck und mit Administrator-Abfrage. Andere Profile bleiben unberührt."));
 
         if (window.Game is { } game) {
@@ -87,7 +87,7 @@ static class PresetsPage
             window.Refresh();
         }
         catch (OperationCanceledException e) {
-            MessageBox.Show(window, e.Message, "GEN·FRAME Einrichtung");
+            MessageBox.Show(window, e.Message, "ED-Overdrive");
         }
         catch (Exception e) {
             Ui.Error(e);

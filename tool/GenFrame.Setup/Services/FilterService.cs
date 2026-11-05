@@ -120,7 +120,7 @@ public sealed class FilterService(GameInstall game, Action<string> log)
     const string TrcFixFile = "lilium__sdr_trc_fix.fx";
     const string TrcFixEntry = "lilium__sdr_trc_fix@" + TrcFixFile;
 
-    // The black level fix belongs to Windows HDR (see Preset): switch it in every GEN·FRAME preset to match.
+    // The black level fix belongs to Windows HDR (see Preset): switch it in every EDAA preset to match.
     // The rest of each preset stays as the user left it.
     public void SyncBlackLevelFix()
     {
@@ -152,7 +152,7 @@ public sealed class FilterService(GameInstall game, Action<string> log)
 
     const string FgWindowPreset = "GenFrame_FGFenster.ini";
 
-    // With frame generation ReShade runs a second runtime on GEN·FRAME's D3D12 window and reads
+    // With frame generation ReShade runs a second runtime on EDAA's D3D12 window and reads
     // ReShade2.ini for it. Effects cannot run there (pipeline creation fails on reload, 03.11.2026), so it
     // gets an empty preset of its own: nothing to load, nothing to fail. The filters run in the D3D11 runtime.
     public static void WriteFgWindowConfig(GameInstall game)
@@ -264,7 +264,7 @@ public sealed class FilterService(GameInstall game, Action<string> log)
     static HttpClient CreateClient()
     {
         var client = new HttpClient { Timeout = TimeSpan.FromMinutes(10) };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("GenFrameSetup/0.1");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("ED-Overdrive/0.1");
         return client;
     }
 }

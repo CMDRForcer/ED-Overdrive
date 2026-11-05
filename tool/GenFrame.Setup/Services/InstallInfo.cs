@@ -26,8 +26,8 @@ public static class InstallInfo
 
         var addon = new[] { "GenFrame.addon64", "EDAA.addon64" }.Select(n => Path.Combine(gameFolder, n)).FirstOrDefault(File.Exists);
         list.Add(addon != null
-            ? new Component("GEN·FRAME", ComponentState.Installed, Path.GetFileName(addon), false)
-            : new Component("GEN·FRAME", ComponentState.Missing, "Add-on nicht gefunden", false));
+            ? new Component("EDAA", ComponentState.Installed, Path.GetFileName(addon), false)
+            : new Component("EDAA", ComponentState.Missing, "Add-on nicht gefunden", false));
 
         var streamline = Path.Combine(gameFolder, "sl.interposer.dll");
         list.Add(File.Exists(streamline)

@@ -9,7 +9,7 @@ namespace GenFrame.Setup.Services;
 
 public enum Channel { Stable, Development }
 
-// Installs ReShade (add-on build), GEN·FRAME and Streamline into the game folder.
+// Installs ReShade (add-on build), EDAA and Streamline into the game folder.
 // Sources: see docs/tool-research.md.
 public sealed class InstallService(GameInstall game, Action<string> log)
 {
@@ -67,7 +67,7 @@ public sealed class InstallService(GameInstall game, Action<string> log)
                 entry.ExtractToFile(Path.Combine(game.Folder, name), overwrite: true);
             }
         }
-        log("GEN·FRAME-Paket installiert (DLAA, XeSS, Streamline).");
+        log("EDAA-Paket installiert (DLAA, XeSS, Streamline).");
 
         if (dev != null) {
             foreach (var file in Directory.EnumerateFiles(dev.Value.Folder)) {
@@ -229,7 +229,7 @@ public sealed class InstallService(GameInstall game, Action<string> log)
     static HttpClient CreateClient()
     {
         var client = new HttpClient { Timeout = TimeSpan.FromMinutes(10) };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("GenFrameSetup/0.1");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("ED-Overdrive/0.1");
         return client;
     }
 }

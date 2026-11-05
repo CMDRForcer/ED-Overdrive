@@ -67,13 +67,13 @@ sealed class InstallDialog : Window
               $"• {CleanupService.FindOldFiles(game).Count} Dateien/Ordner von ReShade, EDAA, Streamline und Test-Builds " +
               $"werden nach {CleanupService.Root} verschoben (nicht gelöscht).\n" +
               "• EDHM, RenoDX und die Spieldateien bleiben unverändert.\n" +
-              "• Danach werden ReShade, GEN·FRAME und Streamline frisch installiert, mit Standardwerten.\n" +
+              "• Danach werden ReShade, EDAA und Streamline frisch installiert, mit Standardwerten.\n" +
               "• Das Filter-Set wird mit der Variante „Lebendig“ eingerichtet (umschaltbar unter „Filter“).\n\nFortfahren?"
             : "Installieren / Aktualisieren:\n\n" +
-              "• ReShade, GEN·FRAME und Streamline werden installiert oder ersetzt.\n" +
+              "• ReShade, EDAA und Streamline werden installiert oder ersetzt.\n" +
               "• Deine Einstellungen in ReShade.ini bleiben, fehlende Werte werden ergänzt.\n" +
               "• Vorher wird ein Backup angelegt.\n\nFortfahren?";
-        if (MessageBox.Show(owner, question, "GEN·FRAME Einrichtung", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) {
+        if (MessageBox.Show(owner, question, "ED-Overdrive", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) {
             return;
         }
 

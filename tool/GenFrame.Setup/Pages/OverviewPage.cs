@@ -37,7 +37,7 @@ static class OverviewPage
             page.Children.Add(Ui.Row($"{c.Name} {state}", Ui.Text(c.Detail, Ui.Brush("MutedBrush"))));
         }
 
-        // RenoDX switches the game's output to HDR, but with frame generation GEN·FRAME's D3D12 output (SDR only
+        // RenoDX switches the game's output to HDR, but with frame generation EDAA's D3D12 output (SDR only
         // until Phase 3) shows the picture: black screen on 03.11.2026.
         var renodxOn = components.Any(c => c.Name == "RenoDX" && c.State == ComponentState.Installed);
         var iniPath = System.IO.Path.Combine(game.Folder, "ReShade.ini");
@@ -80,7 +80,7 @@ static class OverviewPage
             return;
         }
         if (!GameLocator.IsGameFolder(dialog.FolderName)) {
-            MessageBox.Show(window, "In diesem Ordner liegt keine EliteDangerous64.exe.", "GEN·FRAME Einrichtung");
+            MessageBox.Show(window, "In diesem Ordner liegt keine EliteDangerous64.exe.", "ED-Overdrive");
             return;
         }
         window.SetGame(new GameInstall(dialog.FolderName, GameStore.Manual));

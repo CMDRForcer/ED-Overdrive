@@ -43,7 +43,7 @@ static class DiagnosePage
     {
         var dialog = new SaveFileDialog {
             Title = "Diagnose-Zip speichern",
-            FileName = $"GenFrame-Diagnose-{DateTime.Now:yyyyMMdd-HHmm}.zip",
+            FileName = $"ED-Overdrive-Diagnose-{DateTime.Now:yyyyMMdd-HHmm}.zip",
             Filter = "Zip-Datei|*.zip",
             InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
         };

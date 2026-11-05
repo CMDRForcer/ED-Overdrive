@@ -12,7 +12,7 @@ public enum CheckStatus { Ok, Warning, Info }
 public sealed record CheckResult(string Group, string Title, CheckStatus Status, string Detail,
     string? FixLabel = null, Action? Fix = null);
 
-// Looks for settings that are known to clash with GEN·FRAME. Run() only reads; a fix only runs when the
+// Looks for settings that are known to clash with EDAA. Run() only reads; a fix only runs when the
 // user clicks it, and the page makes the backup first. EDHM, RenoDX, the driver and Windows are never changed.
 public sealed partial class EliteCheck(GameInstall game, string graphicsFolder)
 {
@@ -74,7 +74,7 @@ public sealed partial class EliteCheck(GameInstall game, string graphicsFolder)
                 var taa = (Edaa("aa_method") ?? "0") == "0";
                 var why = ss > 1
                     ? "Das kostet viel Leistung. Gemessen auf einer RTX 4070 Ti: Bei 1,0 sind es etwa 68 echte Bilder, bei 1,25 in Stationen etwa 57, bei 2,0 nur noch 3–6."
-                    : taa ? "Bewusst gesetzt? Das Spiel rendert dann kleiner und GEN·FRAME skaliert hoch."
+                    : taa ? "Bewusst gesetzt? Das Spiel rendert dann kleiner und EDAA skaliert hoch."
                     : "DLAA und XeSS Native AA erwarten die volle Auflösung.";
                 results.Add(new(GroupGraphics, "Supersampling", ss < 1 && taa ? CheckStatus.Info : CheckStatus.Warning,
                     $"{text}. {why}", "Auf 1,0 setzen", () => SetXml(CustomXml, "SSAAMultiplier", "1.000000")));
@@ -106,7 +106,7 @@ public sealed partial class EliteCheck(GameInstall game, string graphicsFolder)
         if (XmlValue(DisplayXml, "LimitFrameRate") == "true") {
             var max = XmlValue(DisplayXml, "MaxFramesPerSecond") ?? "?";
             results.Add(new(GroupLimiter, "Bildlimit im Spiel", GenerateOn ? CheckStatus.Warning : CheckStatus.Info,
-                $"An ({max} FPS). Zusammen mit dem Limit von GEN·FRAME wird der Takt unruhig.", "Ausschalten",
+                $"An ({max} FPS). Zusammen mit dem Limit von EDAA wird der Takt unruhig.", "Ausschalten",
                 () => SetXml(DisplayXml, "LimitFrameRate", "false")));
         }
         else if (File.Exists(DisplayXml)) {
@@ -172,14 +172,14 @@ public sealed partial class EliteCheck(GameInstall game, string graphicsFolder)
 
         var hz = DisplayInfo.RefreshRate();
         if (hz is not { } rate) {
-            results.Add(new(GroupLimiter, "Limit von GEN·FRAME", CheckStatus.Info, $"{limit} angezeigte FPS, Bildwiederholrate unbekannt."));
+            results.Add(new(GroupLimiter, "Limit von EDAA", CheckStatus.Info, $"{limit} angezeigte FPS, Bildwiederholrate unbekannt."));
         }
         else if (limit > 0 && limit <= rate) {
-            results.Add(new(GroupLimiter, "Limit von GEN·FRAME", CheckStatus.Ok, $"{limit} angezeigte FPS bei {rate} Hz, passt."));
+            results.Add(new(GroupLimiter, "Limit von EDAA", CheckStatus.Ok, $"{limit} angezeigte FPS bei {rate} Hz, passt."));
         }
         else {
             var target = rate - 4;
-            results.Add(new(GroupLimiter, "Limit von GEN·FRAME", CheckStatus.Warning,
+            results.Add(new(GroupLimiter, "Limit von EDAA", CheckStatus.Warning,
                 (limit == 0 ? "Aus" : $"{limit} angezeigte FPS") + $" bei {rate} Hz. Der Hauptmonitor kann mehr als {rate} Bilder nicht zeigen.",
                 $"Auf {target} setzen", () => SetEdaa("fg_fps_limit", target.ToString(CultureInfo.InvariantCulture))));
         }

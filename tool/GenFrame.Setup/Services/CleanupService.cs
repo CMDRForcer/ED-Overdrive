@@ -3,7 +3,7 @@ using System.IO.Enumeration;
 
 namespace GenFrame.Setup.Services;
 
-// "Clean reinstall": moves everything ReShade, EDAA/GEN·FRAME, Streamline and their leftovers put into
+// "Clean reinstall": moves everything ReShade, EDAA, Streamline and their leftovers put into
 // the game folder into a folder of its own. Nothing is deleted; EDHM, RenoDX and game files stay.
 public static class CleanupService
 {

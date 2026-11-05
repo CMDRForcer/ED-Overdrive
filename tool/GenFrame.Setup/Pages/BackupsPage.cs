@@ -64,7 +64,7 @@ static class BackupsPage
     static void Restore(MainWindow window, Backup backup)
     {
         var answer = MessageBox.Show(window, $"Backup „{backup.Label}“ vom {backup.Created:dd.MM.yyyy HH:mm} wiederherstellen?",
-            "GEN·FRAME Einrichtung", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            "ED-Overdrive", MessageBoxButton.YesNo, MessageBoxImage.Question);
         if (answer != MessageBoxResult.Yes) {
             return;
         }
