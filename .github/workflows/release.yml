@@ -1,0 +1,40 @@
+name: Build ED-Overdrive
+
+# A published release gets the exe attached. A manual run only builds it, as a test.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Build the exe
+        shell: pwsh
+        run: |
+          $version = '0.1.0'
+          if ($env:TAG -match '^v?(\d+\.\d+\.\d+)') { $version = $Matches[1] }
+          dotnet publish tool/GenFrame.Setup/GenFrame.Setup.csproj -p:PublishProfile=Release -p:Version=$version
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+      - name: Attach to the release
+        if: github.event_name == 'release'
+        run: gh release upload "$env:TAG" tool/GenFrame.Setup/bin/publish/ED-Overdrive.exe --clobber
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+          GH_TOKEN: ${{ github.token }}
+      - name: Keep the test build
+        if: github.event_name != 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ED-Overdrive
+          path: tool/GenFrame.Setup/bin/publish/ED-Overdrive.exe
+          retention-days: 7
