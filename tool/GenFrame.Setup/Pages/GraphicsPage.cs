@@ -30,6 +30,16 @@ static class GraphicsPage
                 Ui.Text("Terrain, Triebwerke, Volumetrie und Sichtweite wirken vermutlich nur mit „Benutzerdefiniert“", Ui.Brush("WarnBrush"))));
         }
 
+        var current = options.CurrentPreset;
+        var presetTitle = Ui.Text("Voreinstellung", Ui.Brush("AccentBrush"));
+        presetTitle.Margin = new Thickness(0, 12, 0, 0);
+        page.Children.Add(presetTitle);
+        page.Children.Add(Ui.Buttons(GraphicsOptions.Presets
+            .Select(p => (UIElement)Ui.Button(p.Name, (_, _) => Save(window, game, options, GraphicsOptions.Values(p)), primary: p == current))
+            .ToArray()));
+        page.Children.Add(Ui.Muted(current != null ? current.Hint : "Aktuell: eigene Werte, keine der vier Stufen."));
+        page.Children.Add(Ui.Muted("Ein Klick speichert sofort, mit Backup. Kantenglättung, Supersampling, Sichtfeld und Bewegungsunschärfe bleiben, wie sie sind."));
+
         var changes = new Dictionary<GraphicsOption, string>();
         foreach (var tier in GraphicsOptions.All.GroupBy(o => o.Tier)) {
             var title = Ui.Text(tier.Key == 1 ? "Stufe 1" : "Stufe 2: über das Menü hinaus, noch nicht getestet", Ui.Brush("AccentBrush"));
@@ -42,8 +52,7 @@ static class GraphicsPage
 
         page.Children.Add(Ui.Buttons(
             Ui.Button("Speichern", (_, _) => Save(window, game, options, changes.Select(c => (c.Key, c.Value))), primary: true),
-            Ui.Button("Verwerfen", (_, _) => window.Refresh()),
-            Ui.Button("Alles auf Normal", (_, _) => Save(window, game, options, GraphicsOptions.All.Select(o => (o, o.Choices[0].Value))))));
+            Ui.Button("Verwerfen", (_, _) => window.Refresh())));
         page.Children.Add(Ui.Muted("Stellst du im Spiel ein fertiges Grafik-Preset ein, kann Elite die Werte überschreiben. Die Seite zeigt immer den Stand aus den Dateien."));
         return page;
     }
