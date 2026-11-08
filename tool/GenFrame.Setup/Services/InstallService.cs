@@ -54,6 +54,8 @@ public sealed class InstallService(GameInstall game, Action<string> log)
             Pages.BackupsPage.FilesToSave(game).Concat(replaced));
         log($"Backup angelegt: {backup.Files.Count} Dateien.");
 
+        var newer = KeepNewerDlls();
+
         if (clean) {
             CleanupService.MoveOldFiles(game, log);
         }
@@ -76,6 +78,8 @@ public sealed class InstallService(GameInstall game, Action<string> log)
             log($"Entwicklungs-Build {dev.Value.Commit[..7]} darübergelegt.");
         }
 
+        RestoreNewerDlls(newer);
+
         WriteReShadeIni(clean, disabledAddons);
         FilterService.WriteFgWindowConfig(game);
         log("ReShade2.ini für das FG-Fenster angelegt (ohne Effekte).");
@@ -85,6 +89,44 @@ public sealed class InstallService(GameInstall game, Action<string> log)
             await new FilterService(game, log).Install(FilterVariant.Vivid);
         }
         log("Fertig. Elite kann gestartet werden.");
+    }
+
+    // NVIDIA's DLLs (DLSS, DLSS-G) and Streamline load newer builds than the package ships, and the user updates them
+    // by hand. An install must never downgrade them: the game folder's DLLs are kept aside before the package
+    // goes in, and every one with a higher file version goes back afterwards. Equal versions take the package's.
+    List<(string Name, byte[] Data, Version Version)> KeepNewerDlls()
+    {
+        var kept = new List<(string, byte[], Version)>();
+        foreach (var name in PackageFiles.Where(f => f.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))) {
+            var path = Path.Combine(game.Folder, name);
+            if (FileVersion(path) is { } version) {
+                kept.Add((name, File.ReadAllBytes(path), version));
+            }
+        }
+        return kept;
+    }
+
+    void RestoreNewerDlls(List<(string Name, byte[] Data, Version Version)> kept)
+    {
+        foreach (var (name, data, version) in kept) {
+            var path = Path.Combine(game.Folder, name);
+            var installed = FileVersion(path);
+            if (installed == null || version > installed) {
+                File.WriteAllBytes(path, data);
+                log($"{name}: neuere Version {version} behalten (Paket hat {installed?.ToString() ?? "keine"}).");
+            }
+        }
+    }
+
+    static Version? FileVersion(string path)
+    {
+        if (!File.Exists(path)) {
+            return null;
+        }
+        var info = System.Diagnostics.FileVersionInfo.GetVersionInfo(path);
+        return info.FileMajorPart == 0 && info.FileMinorPart == 0 && info.FileBuildPart == 0 && info.FilePrivatePart == 0
+            ? null
+            : new Version(info.FileMajorPart, info.FileMinorPart, info.FileBuildPart, info.FilePrivatePart);
     }
 
     void EnsureGameClosed()

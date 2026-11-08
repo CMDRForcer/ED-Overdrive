@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace GenFrame.Setup.Services;
 
-public enum FilterVariant { Natural, Vivid, Performance }
+public enum FilterVariant { Natural, Vivid, Performance, Dlss5 }
 
 // The SDR filter set of docs/plan.md: only the shaders it needs, from their original sources
 // (same URLs as the ReShade installer, see docs/tool-research.md), plus one preset file per variant.
@@ -35,12 +35,14 @@ public sealed class FilterService(GameInstall game, Action<string> log)
     public static string PresetFile(FilterVariant variant) => variant switch {
         FilterVariant.Natural => "GenFrame_Natuerlich.ini",
         FilterVariant.Vivid => "GenFrame_Lebendig.ini",
+        FilterVariant.Dlss5 => "GenFrame_DLSS5.ini",
         _ => "GenFrame_Leistung.ini",
     };
 
     public static string Describe(FilterVariant variant) => variant switch {
         FilterVariant.Natural => "Deband, Schärfe",
         FilterVariant.Vivid => "Deband, Farbe, Klarheit, Vibrance, Schärfe",
+        FilterVariant.Dlss5 => "Deband, leichte Schärfe – Farbe und Klarheit macht DLSS 5",
         _ => "nur Schärfe",
     };
 
@@ -103,6 +105,12 @@ public sealed class FilterService(GameInstall game, Action<string> log)
 
     public void SetActive(FilterVariant variant)
     {
+        // A variant added after the filter set was installed (DLSS 5) gets its start values here.
+        var preset = Path.Combine(game.Folder, PresetFile(variant));
+        if (!File.Exists(preset)) {
+            File.WriteAllText(preset, Preset(variant), new UTF8Encoding(false));
+            log($"{PresetFile(variant)} angelegt.");
+        }
         var path = Path.Combine(game.Folder, "ReShade.ini");
         var ini = File.Exists(path) ? IniFile.Load(path) : new IniFile();
         ini.Set("GENERAL", "PresetPath", @".\" + PresetFile(variant));
@@ -227,7 +235,8 @@ public sealed class FilterService(GameInstall game, Action<string> log)
             ("HDR", "FakeHDR.fx", false, []),
             ("Bloom", "qUINT_bloom.fx", false, []),
             ("ADOF", "qUINT_dof.fx", false, []),
-            ("ContrastAdaptiveSharpen", "CAS.fx", true, [("Contrast", F(0)), ("Sharpening", F(0.40))]),
+            // DLSS 5 sharpens and adds contrast itself: CAS stays, but lighter.
+            ("ContrastAdaptiveSharpen", "CAS.fx", true, [("Contrast", F(0)), ("Sharpening", F(variant == FilterVariant.Dlss5 ? 0.25 : 0.40))]),
             ("FilmGrain", "FilmGrain.fx", false, []),
             // With Windows HDR on, Windows shows SDR games with the sRGB curve, but they are made for gamma 2.2:
             // blacks come out grey. Decode as power 2.2, encode as sRGB. Without HDR it would only darken.

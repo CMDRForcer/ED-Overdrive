@@ -71,12 +71,15 @@ public sealed partial class EliteCheck(GameInstall game, string graphicsFolder)
                 results.Add(new(GroupGraphics, "Supersampling", CheckStatus.Ok, $"{text}, passt."));
             }
             else {
-                var taa = (Edaa("aa_method") ?? "0") == "0";
+                // Below 1x EDAA upscales with whatever method is chosen: DLAA becomes DLSS, XeSS Native AA XeSS (docs/addon.md 6e).
+                var method = Edaa("aa_method") ?? "0";
+                var upscaler = method switch { "1" => "DLSS", "0" => "EDAA TAA", _ => "XeSS" };
+                var dlss5 = File.Exists(Path.Combine(game.Folder, "gitc-uplift.addon64"));
                 var why = ss > 1
                     ? "Das kostet viel Leistung. Gemessen auf einer RTX 4070 Ti: Bei 1,0 sind es etwa 68 echte Bilder, bei 1,25 in Stationen etwa 57, bei 2,0 nur noch 3–6."
-                    : taa ? "Bewusst gesetzt? Das Spiel rendert dann kleiner und EDAA skaliert hoch."
-                    : "DLAA und XeSS Native AA erwarten die volle Auflösung.";
-                results.Add(new(GroupGraphics, "Supersampling", ss < 1 && taa ? CheckStatus.Info : CheckStatus.Warning,
+                    : dlss5 && method == "1" ? "So gewollt mit DLSS 5: Elite rendert kleiner, DLSS 5 rechnet in dieser Größe, DLSS skaliert hoch."
+                    : $"Das Spiel rendert kleiner und EDAA skaliert mit {upscaler} hoch.";
+                results.Add(new(GroupGraphics, "Supersampling", ss < 1 ? CheckStatus.Info : CheckStatus.Warning,
                     $"{text}. {why}", "Auf 1,0 setzen", () => SetXml(CustomXml, "SSAAMultiplier", "1.000000")));
             }
         }
