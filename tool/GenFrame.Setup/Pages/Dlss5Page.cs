@@ -87,7 +87,7 @@ static class Dlss5Page
             }));
         }
         page.Children.Add(Ui.Buttons([.. buttons]));
-        page.Children.Add(Ui.Muted("Optimieren: EDAA auf DLSS, Elite rendert mit 0,65 und DLSS 5 läuft vor dem Hochskalieren (spart Rechenzeit), " +
+        page.Children.Add(Ui.Muted("Optimieren: EDAA auf DLSS, Elite rendert mit 0,85 und DLSS 5 läuft vor dem Hochskalieren (spart Rechenzeit), " +
             "Gesichtsmaske aus, Filter „DLSS 5“ statt „Lebendig“. Feinjustieren im Spiel unter Pos1 → GITC Uplift → Look.", 0));
         return page;
     }

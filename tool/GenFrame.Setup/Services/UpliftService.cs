@@ -21,9 +21,10 @@ public static class UpliftService
     public const string RuntimeName = "nvngx_dlssnr.dll";
     static readonly string[] Shaders = ["Uplift.fx", "UpliftMask.fx"];
 
-    // Render scale with DLSS 5: Elite's step closest to DLSS Quality's optimum (0.67). DLSS 5 runs at that size
-    // before EDAA's DLSS upscales. 0.65 chosen on 08.11.2026 over 0.75: no visible loss, fewer pixels for all three.
-    public const double RenderScale = 0.65;
+    // Render scale with DLSS 5: Elite renders at 85 %, DLSS 5 runs at that size before EDAA's DLSS upscales.
+    // Tested 08.11.2026 on an RTX 4070 Ti: 1.0 stutters with DLSS 5, 0.85 ran at about 67 real -> 135 FPS
+    // and is clearly sharper than 0.65.
+    public const double RenderScale = 0.85;
 
     public sealed record Runtime(string Label, bool ForRtx40);
 
