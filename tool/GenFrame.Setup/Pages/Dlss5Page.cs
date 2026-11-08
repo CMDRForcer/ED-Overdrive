@@ -16,7 +16,8 @@ static class Dlss5Page
         page.Children.Add(Ui.Heading("DLSS 5"));
         page.Children.Add(Ui.Muted("NVIDIAs neuronales Rendering verbessert Licht, Materialien und Farben im fertigen Bild. " +
             $"Die App bringt GITC Uplift {UpliftService.Version} mit (MIT, ghostinthecamera). Uplift nutzt den DLSS-Aufruf von EDAA " +
-            "und dessen Bewegungsdaten. Kostet viel: auf einer RTX 4070 Ti in 1440p etwa 41–46 Bilder pro Sekunde und bis 9,4 GB Grafikspeicher."));
+            "und dessen Bewegungsdaten. Optimiert gemessen auf einer RTX 4070 Ti in 1440p: etwa 67 echte Bilder pro Sekunde " +
+            "(134 mit Frame Generation), DLSS 5 belegt rund 0,4 GB Grafikspeicher."));
 
         if (window.Game is not { } game) {
             page.Children.Add(Ui.Muted("Zuerst unter „Übersicht“ den Spielordner festlegen."));
@@ -51,7 +52,7 @@ static class Dlss5Page
 
         page.Children.Add(Ui.Muted(
             $"{UpliftService.RuntimeName} ist eine NVIDIA-Datei und darf nicht mitgeliefert werden. Auf RTX 50 läuft das NVIDIA-Original, " +
-            "auf RTX 20/30/40 nur ein angepasster Build vom RenoDX-Discord (Signatur ungültig, auf eigenes Risiko). " +
+            "auf RTX 20/30/40 nur ein angepasster Community-Build (unsigniert, auf eigenes Risiko; ab 310.9.16 mit dem schnelleren Netz Small FP8). " +
             "Die App prüft die Datei anhand ihrer Prüfsumme.", 4));
 
         var buttons = new List<UIElement> {
