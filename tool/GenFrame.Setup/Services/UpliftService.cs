@@ -21,8 +21,9 @@ public static class UpliftService
     public const string RuntimeName = "nvngx_dlssnr.dll";
     static readonly string[] Shaders = ["Uplift.fx", "UpliftMask.fx"];
 
-    // Render scale with DLSS 5: Elite renders at 75 %, DLSS 5 runs at that size before EDAA's DLSS upscales.
-    public const double RenderScale = 0.75;
+    // Render scale with DLSS 5: Elite's step closest to DLSS Quality's optimum (0.67). DLSS 5 runs at that size
+    // before EDAA's DLSS upscales. 0.65 chosen on 08.11.2026 over 0.75: no visible loss, fewer pixels for all three.
+    public const double RenderScale = 0.65;
 
     public sealed record Runtime(string Label, bool ForRtx40);
 
@@ -128,14 +129,18 @@ public static class UpliftService
         var path = ReShadeIni(game);
         var ini = File.Exists(path) ? IniFile.Load(path) : new IniFile();
         ini.Set("EDAA", "aa_method", "1");
+        ini.Set("EDAA", "dlss_preset", "11"); // K: costs no more than J here and flickers less
         ini.Set("Uplift", "Enabled", "1");
+        // "Match game": DLSS 5 works at the game's render size (looked best in the test). Value read from
+        // Uplift 1.8.0's ReShade.ini after picking it in the overlay.
+        ini.Set("Uplift", "ResolutionMode", "4");
         ini.Set("Uplift", "KeepFaces", "0");
         ini.Set("Uplift", "PreUpscale", "1");
         // Small FP8 needs NR 310.9.16; measured 08.11.2026 on an RTX 4070 Ti: 67 instead of 56 real frames.
         var smallFp8 = RuntimeVersion(game) >= new Version(310, 9, 16);
         ini.Set("Uplift", "Preset", smallFp8 ? "2" : "1");
         ini.Save(path);
-        log($"EDAA auf DLSS, DLSS 5 an, vor dem Hochskalieren, Gesichtsmaske aus, Netz {(smallFp8 ? "Small FP8" : "Legacy (DLL 310.8)")}.");
+        log($"EDAA auf DLSS (Modell K), DLSS 5 an in Spielauflösung, vor dem Hochskalieren, Gesichtsmaske aus, Netz {(smallFp8 ? "Small FP8" : "Legacy (DLL 310.8)")}.");
 
         if (File.Exists(CustomXml)) {
             EliteCheck.SetXml(CustomXml, "SSAAMultiplier", RenderScale.ToString("0.000000", CultureInfo.InvariantCulture));
