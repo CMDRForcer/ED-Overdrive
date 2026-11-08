@@ -10,9 +10,10 @@ public static class CleanupService
     static readonly string[] FilePatterns = [
         "dxgi.dll", "ReShade*.ini", "ReShade*.ini*", "*Preset*.ini", "*Preset*.ini_*", "GenFrame_*.ini", "ReShade*.log*",
         "EDAA.addon64*", "GenFrame.addon64*", "sl.*.dll", "sl.log*", "nvngx_dlss*.dll*", "libxess.dll",
-        "renodx-dlss5*", "dlss5-*", "DLSS5*", "RenoDX-DLSS5*",
+        "renodx-dlss5*", "dlss5-*", "DLSS5*", "RenoDX-DLSS5*", "gitc-uplift*",
     ];
-    static readonly string[] FolderNames = ["reshade-shaders"];
+    // GITC-Uplift: DLSS 5 comes back with one click on its page, the DLL is kept in the app's folder.
+    static readonly string[] FolderNames = ["reshade-shaders", "GITC-Uplift"];
 
     // Never touched, even if a pattern above would match.
     static readonly string[] Keep = ["renodx-elitedangerous.addon64", "d3d11.dll", "d3dx.ini", "d3dcompiler_47.dll"];

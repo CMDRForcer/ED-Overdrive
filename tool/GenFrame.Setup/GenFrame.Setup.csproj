@@ -12,4 +12,9 @@
     <Product>ED-Overdrive</Product>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- GITC Uplift (MIT, github.com/ghostinthecamera/GITC-Uplift): shipped inside the exe, checked by hash at install. -->
+    <EmbeddedResource Include="ThirdParty\GITC-Uplift-1.8.0.zip" LogicalName="GITC-Uplift.zip" />
+  </ItemGroup>
+
 </Project>

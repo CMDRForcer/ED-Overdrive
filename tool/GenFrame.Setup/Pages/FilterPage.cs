@@ -21,7 +21,9 @@ static class FilterPage
         }
 
         var active = FilterService.Active(game);
-        var installed = Enum.GetValues<FilterVariant>().All(v => File.Exists(Path.Combine(game.Folder, FilterService.PresetFile(v))));
+        // The DLSS 5 variant came later; SetActive writes its preset when it is missing.
+        var installed = Enum.GetValues<FilterVariant>().Where(v => v != FilterVariant.Dlss5)
+            .All(v => File.Exists(Path.Combine(game.Folder, FilterService.PresetFile(v))));
 
         // The black level fix follows Windows HDR in every variant (FilterService.SyncBlackLevelFix).
         var hdr = DisplayInfo.HdrEnabled();
@@ -112,6 +114,7 @@ static class FilterPage
     static string Name(FilterVariant variant) => variant switch {
         FilterVariant.Natural => "Natürlich",
         FilterVariant.Vivid => "Lebendig",
+        FilterVariant.Dlss5 => "DLSS 5",
         _ => "Leistung",
     };
 }

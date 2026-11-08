@@ -159,6 +159,13 @@ public sealed class InstallService(GameInstall game, Action<string> log)
             foreach (var path in DevFiles) {
                 await DownloadTo(Raw(path), Path.Combine(temp, Path.GetFileName(path)));
             }
+            // The DLSS DLL EDAA was built and tested with; older builds branches do not have it yet.
+            try {
+                await DownloadTo(Raw("nvngx_dlss.dll"), Path.Combine(temp, "nvngx_dlss.dll"));
+            }
+            catch (HttpRequestException) {
+                log("nvngx_dlss.dll nicht im Entwicklungs-Build, die aus dem Paket bleibt.");
+            }
             Directory.Move(temp, folder);
         }
         return (folder, commit);

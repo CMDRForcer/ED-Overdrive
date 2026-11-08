@@ -48,6 +48,7 @@ public partial class MainWindow : Window
             "modes" => ModesPage.Build(this),
             "filters" => FilterPage.Build(this),
             "graphics" => GraphicsPage.Build(this),
+            "dlss5" => Dlss5Page.Build(this),
             "check" => CheckPage.Build(this),
             "presets" => PresetsPage.Build(this),
             "settings" => SettingsPage.Build(this),

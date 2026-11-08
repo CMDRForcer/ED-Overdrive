@@ -25,6 +25,7 @@
             <RadioButton Style="{StaticResource NavButton}" Content="Schnellwahl" Tag="modes" Checked="OnNavigate"/>
             <RadioButton Style="{StaticResource NavButton}" Content="Filter" Tag="filters" Checked="OnNavigate"/>
             <RadioButton Style="{StaticResource NavButton}" Content="Grafik" Tag="graphics" Checked="OnNavigate"/>
+            <RadioButton Style="{StaticResource NavButton}" Content="DLSS 5" Tag="dlss5" Checked="OnNavigate"/>
             <RadioButton Style="{StaticResource NavButton}" Content="Elite-Check" Tag="check" Checked="OnNavigate"/>
             <RadioButton Style="{StaticResource NavButton}" Content="Presets" Tag="presets" Checked="OnNavigate"/>
             <RadioButton Style="{StaticResource NavButton}" Content="Einstellungen" Tag="settings" Checked="OnNavigate"/>
