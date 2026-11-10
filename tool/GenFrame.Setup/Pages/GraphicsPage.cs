@@ -37,7 +37,10 @@ static class GraphicsPage
         page.Children.Add(Ui.Buttons(GraphicsOptions.Presets
             .Select(p => (UIElement)Ui.Button(p.Name, (_, _) => Save(window, game, options, GraphicsOptions.Values(p)), primary: p == current))
             .ToArray()));
-        page.Children.Add(Ui.Muted(current != null ? current.Hint : "Aktuell: eigene Werte, keine der vier Stufen."));
+        var setupLevel = new[] { GraphicsOptions.SupersamplingLevel, GraphicsOptions.Dlss5Level }.FirstOrDefault(options.Matches);
+        page.Children.Add(Ui.Muted(current != null ? current.Hint
+            : setupLevel != null ? $"Aktuell: {setupLevel.Hint} Gewechselt wird unter „Schnellwahl“."
+            : "Aktuell: eigene Werte, keine der vier Stufen."));
         page.Children.Add(Ui.Muted("Ein Klick speichert sofort, mit Backup. Kantenglättung, Supersampling, Sichtfeld und Bewegungsunschärfe bleiben, wie sie sind."));
 
         var changes = new Dictionary<GraphicsOption, string>();
