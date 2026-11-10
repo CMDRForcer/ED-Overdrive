@@ -21,18 +21,21 @@ public sealed record GraphicsPreset(string Name, string Hint, Dictionary<string,
 public sealed class GraphicsOptions(string graphicsFolder)
 {
     public static readonly GraphicsOption[] All = [
-        new(1, "Terrain", "UltraPlus zeigt mehr Details auf Planeten. Mittlere Kosten.", [("2", "High"), ("3", "Ultra"), ("4", "UltraPlus")], Tag: "TerrainQuality"),
-        new(1, "Triebwerkskegel: Ultra", "Feinere Triebwerke. Vermutlich geringe Kosten.", [("2", "High"), ("3", "Ultra")], Tag: "JetConeQuality"),
-        new(1, "Volumetrie: Ultra", "Nebel und Ringe in voller Auflösung. Vermutlich am teuersten, bei Rucklern zuerst abschalten.", [("2", "High"), ("3", "Ultra")], Tag: "VolumetricsQuality"),
+        new(1, "Terrain", "UltraPlus zeigt mehr Details auf Planeten. Mittlere Kosten.", [("1", "Medium"), ("2", "High"), ("3", "Ultra"), ("4", "UltraPlus")], Tag: "TerrainQuality"),
+        new(1, "Triebwerkskegel", "Ultra: feinere Triebwerke. Vermutlich geringe Kosten.", [("1", "Medium"), ("2", "High"), ("3", "Ultra")], Tag: "JetConeQuality"),
+        new(1, "Volumetrie", "Nebel und Ringe, Ultra in voller Auflösung. Vermutlich am teuersten, bei Rucklern zuerst herunterstellen.",
+            [("0", "Low"), ("1", "Medium"), ("2", "High"), ("3", "Ultra")], Tag: "VolumetricsQuality"),
         new(1, "Reflexionen (Envmap)", "Schärfere Reflexionen im Lack. 2048 ist noch nicht getestet.",
             [("512", "512"), ("1024", "1024"), ("2048", "2048 (Stufe 2)")], OverridePath: ["Envmap", "High", "TextureSize"]),
+        new(1, "Galaxie-Hintergrund: 8192", "8192 ist schärfer und braucht mehr Grafikspeicher.",
+            [("4096", "4096"), ("8192", "8192")], OverridePath: ["GalaxyBackground", "High", "TextureSize"]),
         new(2, "Sichtweite", "Bei 1,5 ploppen Details später auf. Mehr Last für CPU und Grafikkarte.", [("0.900000", "0,9"), ("1.000000", "1,0"), ("1.500000", "1,5")], Tag: "LODDistanceScale"),
         new(2, "Planetentexturen: 8192", "Schärfere Planeten. Kann bei 12 GB Grafikspeicher knapp werden, dann ruckelt es.",
             [("4096", "4096"), ("8192", "8192")], OverridePath: ["Planets", "Ultra", "TextureSize"]),
     ];
 
     const string Terrain = "TerrainQuality", Jet = "JetConeQuality", Volumetrics = "VolumetricsQuality", Distance = "LODDistanceScale";
-    const string Envmap = "Envmap/High/TextureSize", Planets = "Planets/Ultra/TextureSize";
+    const string Envmap = "Envmap/High/TextureSize", Planets = "Planets/Ultra/TextureSize", Galaxy = "GalaxyBackground/High/TextureSize";
 
     static Dictionary<string, string> Level(int shadows, int detail, int effects, int galaxy, int dof, int blend, int sampler, int filter,
         int terrain, string distance, int envmap) => new() {
@@ -52,6 +55,23 @@ public sealed class GraphicsOptions(string graphicsFolder)
         new("Quality+", "Quality plus Sichtweite 1,5. Noch nicht gemessen, im Ring wird es vermutlich eng.", Level(4, 3, 3, 2, 2, 2, 3, 4, 4, "1.500000", 1024)),
     ];
 
+    static Dictionary<string, string> With(Dictionary<string, string> values, params (string Key, string Value)[] changes)
+    {
+        foreach (var (key, value) in changes) {
+            values[key] = value;
+        }
+        return values;
+    }
+
+    // The two game setups (GameSetups). Not among the four buttons: they belong to a render scale.
+    // DLSS 5: what was measured on 08.11.2026 (about 67 real -> 135 FPS at 0.85), Standard with jet cones and
+    // volumetrics on High, reflections 1024. Supersampling 1.5: shadows, effects, terrain and volumetrics lowered,
+    // textures, materials and view distance kept; 62 real -> 124 FPS with DLAA on 10.11.2026.
+    public static readonly GraphicsPreset Dlss5Level = new("DLSS 5", "Grafik zum Spiel-Setup DLSS 5.",
+        With(Level(4, 3, 3, 2, 2, 2, 3, 4, 3, "1.000000", 1024), (Jet, "2"), (Volumetrics, "2"), (Galaxy, "8192")));
+    public static readonly GraphicsPreset SupersamplingLevel = new("Supersampling 1,5", "Grafik zum Spiel-Setup Supersampling 1,5.",
+        With(Level(2, 3, 1, 1, 0, 2, 2, 4, 1, "1.000000", 1024), (Jet, "1"), (Volumetrics, "0"), (Galaxy, "4096")));
+
     static GraphicsOption OptionFor(string key) =>
         All.FirstOrDefault(o => o.Key == key) ?? new GraphicsOption(0, key, "", [], Tag: key);
 
@@ -59,7 +79,9 @@ public sealed class GraphicsOptions(string graphicsFolder)
         preset.Values.Select(v => (OptionFor(v.Key), v.Value));
 
     // The preset whose values are all in the files; null when something was changed by hand.
-    public GraphicsPreset? CurrentPreset => Presets.FirstOrDefault(p => p.Values.All(v => Same(Read(OptionFor(v.Key)), v.Value)));
+    public GraphicsPreset? CurrentPreset => Presets.FirstOrDefault(Matches);
+
+    public bool Matches(GraphicsPreset preset) => preset.Values.All(v => Same(Read(OptionFor(v.Key)), v.Value));
 
     static bool Same(string? a, string b) =>
         double.TryParse(a, NumberStyles.Float, CultureInfo.InvariantCulture, out var x)
