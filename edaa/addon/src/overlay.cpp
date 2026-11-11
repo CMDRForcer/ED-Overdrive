@@ -14,6 +14,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <type_traits>
 
 namespace edaa
 {
@@ -31,6 +32,32 @@ namespace edaa
                 return widget_changed;
             }
         };
+
+
+        // "Reset" next to a slider: sets that one value back to its default (from settings{}, the same source as
+        // "Reset to defaults"); greyed out while it already has it.
+        template <typename T>
+        void reset_button(change_tracker& edit, settings& config, T settings::* member)
+        {
+            static const settings defaults{};
+            const T fallback = defaults.*member;
+            T& value = config.*member;
+
+            ImGui::SameLine();
+            ImGui::PushID(&value);
+            ImGui::BeginDisabled(value == fallback);
+            if (ImGui::SmallButton("Reset")) {
+                value = fallback;
+                edit.changed = true;
+            }
+            ImGui::EndDisabled();
+            if constexpr (std::is_floating_point_v<T>) {
+                ImGui::SetItemTooltip("Reset to default: %g", static_cast<double>(fallback));
+            } else {
+                ImGui::SetItemTooltip("Reset to default: %d", static_cast<int>(fallback));
+            }
+            ImGui::PopID();
+        }
 
 
         // Render and display sizes, and the upscaling of the chosen method below 1x.
@@ -65,6 +92,7 @@ namespace edaa
 
             if (used == upscaler::taa) {
                 edit(ImGui::SliderFloat("Sharpness", &s.config.upscale_sharpness, 0.0f, 1.0f, "%.2f"));
+                reset_button(edit, s.config, &settings::upscale_sharpness);
                 ImGui::TextUnformatted("Any scale works; the TAA settings (Advanced) apply.");
                 return;
             }
@@ -193,8 +221,10 @@ namespace edaa
                 if (s.config.dlss_reactive_mask) {
                     ImGui::SetNextItemWidth(ImGui::GetFontSize() * 12);
                     edit(ImGui::SliderFloat("Reactive mask strength", &s.config.dlss_reactive_strength, 0.0f, 2.0f, "%.2f"));
+                    reset_button(edit, s.config, &settings::dlss_reactive_strength);
                     ImGui::SetNextItemWidth(ImGui::GetFontSize() * 12);
                     edit(ImGui::SliderFloat("Reactive mask threshold (ignore haze)", &s.config.dlss_reactive_threshold, 0.0f, 0.95f, "%.2f"));
+                    reset_button(edit, s.config, &settings::dlss_reactive_threshold);
                     bool show = s.config.debug == static_cast<int>(debug_view::reactive);
 
                     // Debug view, not saved (the debug view always starts off).
@@ -238,12 +268,17 @@ namespace edaa
             if (taa || taau) {
                 ImGui::TextUnformatted("History");
                 edit(ImGui::SliderFloat("History weight", &s.config.taa_history_weight, 0.5f, 0.98f, "%.2f"));
+                reset_button(edit, s.config, &settings::taa_history_weight);
                 edit(ImGui::SliderFloat("History weight in motion", &s.config.taa_history_weight_motion, 0.3f, 0.95f, "%.2f"));
+                reset_button(edit, s.config, &settings::taa_history_weight_motion);
                 edit(ImGui::SliderFloat("Min history weight (anti-flicker)", &s.config.taa_history_weight_min, 0.5f, 0.95f, "%.2f"));
+                reset_button(edit, s.config, &settings::taa_history_weight_min);
                 edit(ImGui::Checkbox("Anti-flicker (luminance weighting)", &s.config.taa_anti_flicker));
                 ImGui::TextUnformatted("Clipping (lower = less ghosting, more flicker)");
                 edit(ImGui::SliderFloat("Clip box in motion (std dev)", &s.config.taa_clip_gamma, 0.5f, 3.0f, "%.2f"));
+                reset_button(edit, s.config, &settings::taa_clip_gamma);
                 edit(ImGui::SliderFloat("Clip box when still (std dev)", &s.config.taa_clip_gamma_static, 0.5f, 5.0f, "%.2f"));
+                reset_button(edit, s.config, &settings::taa_clip_gamma_static);
             }
 
             // Native resolution TAA only (the upscaling works on the tonemapped image).
@@ -257,6 +292,7 @@ namespace edaa
 
                 edit(ImGui::Checkbox("Soft screen edges (reuse edge history)", &s.config.taa_soft_offscreen));
                 edit(ImGui::SliderFloat("HDR compression scale (higher = bright edges flicker less)", &s.config.taa_hdr_scale, 0.01f, 1000.0f, "%.2f", ImGuiSliderFlags_Logarithmic));
+                reset_button(edit, s.config, &settings::taa_hdr_scale);
             }
 
             if (!taa && !taau) {
@@ -278,6 +314,7 @@ namespace edaa
 
             if (s.config.mask_source == 1) {
                 edit(ImGui::SliderFloat("Vehicle mask distance (m)", &s.config.mask_distance, 0.0f, 20.0f, "%.1f"));
+                reset_button(edit, s.config, &settings::mask_distance);
                 edit(ImGui::Checkbox("No vehicle mask on foot", &s.config.mask_auto_off_on_foot));
             }
 
@@ -345,6 +382,7 @@ namespace edaa
                 s.frame_ms, s.cpu_ms[0], s.cpu_ms[3], s.cpu_ms[1], s.cpu_ms[2], s.cpu_ms[4], s.cpu_ms[5]);
             ImGui::Text("Mip bias: %u sampler binds biased last frame", s.last_biased_binds);
             edit(ImGui::SliderFloat("Upscaling: extra mip bias", &s.config.mip_bias_extra, -4.0f, 2.0f, "%+.1f"));
+            reset_button(edit, s.config, &settings::mip_bias_extra);
             ImGui::Text("Last frame: %u G-buffer binds, %u draws into the HDR target, exposure downsample %s, HUD shader %s, bloom shader %s",
                 s.last.gbuffer_binds, s.last.hdr_draws, s.last.exposure_downsample ? "yes" : "no",
                 s.last.hud_shader ? "yes" : "no", s.last.bloom_shader ? "yes" : "no");
@@ -362,7 +400,9 @@ namespace edaa
             ImGui::TextUnformatted("Jitter (Ctrl+Shift+J)");
             edit(ImGui::Checkbox("Enable sub-pixel jitter", &s.config.jitter_enabled));
             edit(ImGui::SliderInt("Halton phases", &s.config.jitter_phases, 1, 32));
+            reset_button(edit, s.config, &settings::jitter_phases);
             edit(ImGui::SliderFloat("Amplitude (pixels)", &s.config.jitter_scale, 1.0f, 16.0f, "%.1f"));
+            reset_button(edit, s.config, &settings::jitter_scale);
             edit(ImGui::Checkbox("Jitter decals, light volumes and glows (off: they z-fight and flicker)", &s.config.jitter_overlay_draws));
             edit(ImGui::Checkbox("DLSS/XeSS: negate the jitter offset (sign convention check)", &s.config.upscaler_jitter_flip));
             bool flush = s.xess_flush;
@@ -426,6 +466,7 @@ namespace edaa
             edit(ImGui::Checkbox("Generate motion vectors", &s.config.motion_enabled));
             ImGui::Combo("Debug view", &s.config.debug, "Off\0Motion vectors\0Vehicle mask\0Depth\0History rejection\0Moving objects\0Temporal change (flicker)\0HUD mask (upscaling)\0Reactive mask (DLSS)\0");
             edit(ImGui::SliderFloat("Colour saturation (px)", &s.config.debug_motion_pixels, 1.0f, 64.0f, "%.0f"));
+            reset_button(edit, s.config, &settings::debug_motion_pixels);
 
             ImGui::Separator();
             ImGui::TextUnformatted("Auto capture (Ctrl+Shift+C): TAA on/off, jitter only, debug views as PNG");
@@ -501,6 +542,7 @@ namespace edaa
             edit(ImGui::Checkbox("Keep the cockpit HUD steady (no smearing in generated frames)", &s.config.fg_hud_protect));
             ImGui::SetNextItemWidth(ImGui::GetFontSize() * 12);
             edit(ImGui::SliderInt("Frame limit (displayed FPS, 0 = off)", &s.config.fg_fps_limit, 0, 360));
+            reset_button(edit, s.config, &settings::fg_fps_limit);
             ImGui::TextDisabled("Use this limit only (no external limiter): set it just below the refresh rate, e.g. 140 at 144 Hz.");
 
             if (s.config.fg_generate && !st.streamline) {
