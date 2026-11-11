@@ -2,6 +2,8 @@ bin/
 obj/
 *.user
 .vs/
-tool/GenFrame.Setup/ThirdParty/EDAA.zip
-tool/GenFrame.Setup/ThirdParty/ReShade_Setup_Addon.exe
 *.part
+app/ThirdParty/EDAA.zip
+app/ThirdParty/ReShade_Setup_Addon.exe
+# Local notes for Claude Code sessions, not part of the project.
+CLAUDE.md

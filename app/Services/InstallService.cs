@@ -10,17 +10,20 @@ namespace GenFrame.Setup.Services;
 public enum Channel { Stable, Development }
 
 // Installs ReShade (add-on build), EDAA and Streamline into the game folder. Both ship inside the exe
-// (ThirdParty/fetch-bundle.ps1, pinned by hash), so installing needs no internet; only the development
-// channel and the filters download. Sources: see docs/tool-research.md and THIRD_PARTY_NOTICES.md.
+// (ThirdParty/fetch-bundle.ps1; EDAA is built from edaa/ in this repository), so installing needs no
+// internet; only the development channel and the filters download.
+// Sources: see docs/tool-research.md and THIRD_PARTY_NOTICES.md.
 public sealed class InstallService(GameInstall game, Action<string> log)
 {
-    // Keep in step with ThirdParty/fetch-bundle.ps1 (which pins both by SHA-256).
+    // Keep in step with ThirdParty/fetch-bundle.ps1 (which pins the installer by SHA-256).
     public const string BundledReShade = "6.8.0";
-    public const string BundledEdaa = "v0.7.0-cmdr1";
     public const string LicenseFolder = "ED-Overdrive-Lizenzen";
 
-    const string Repository = "CMDRForcer/EDAA";
-    const string DevBranch = "builds/cmdr/stable"; // CI build of every merge, before the next release
+    // The EDAA version inside the exe (version.txt, written by edaa/tools/bundle.ps1).
+    public static string BundledEdaa { get; } = ReadBundledEdaa();
+
+    const string Repository = "CMDRForcer/ED-Overdrive";
+    const string DevBranch = "builds/main"; // CI build of every push to main, before the next release
     const string AddonName = "EDAA.addon64";
 
     static readonly string[] PackageFiles = [
@@ -70,7 +73,7 @@ public sealed class InstallService(GameInstall game, Action<string> log)
             var licenses = Path.Combine(game.Folder, LicenseFolder);
             Directory.CreateDirectory(licenses);
             foreach (var entry in zip.Entries.Where(e => e.Name.Length > 0 &&
-                         (e.FullName.StartsWith("licenses/") || e.FullName is "LICENSE" or "THIRD_PARTY_NOTICES.md"))) {
+                         (e.FullName.Replace('\\', '/').StartsWith("licenses/") || e.FullName is "LICENSE" or "THIRD_PARTY_NOTICES.md"))) {
                 var name = entry.FullName == "LICENSE" ? "EDAA-LICENSE.txt" : entry.Name;
                 entry.ExtractToFile(Path.Combine(licenses, name), overwrite: true);
             }
@@ -105,6 +108,22 @@ public sealed class InstallService(GameInstall game, Action<string> log)
     static Stream Resource(string name) =>
         typeof(InstallService).Assembly.GetManifestResourceStream(name)
             ?? throw new InvalidDataException($"{name} fehlt in dieser App-Version.");
+
+    static string ReadBundledEdaa()
+    {
+        try {
+            using var zip = new ZipArchive(Resource("EDAA.zip"));
+            var entry = zip.GetEntry("version.txt");
+            if (entry == null) {
+                return "0.7.0"; // packages from before version.txt (CMDRForcer/EDAA v0.7.0-cmdr1)
+            }
+            using var reader = new StreamReader(entry.Open());
+            return reader.ReadToEnd().Trim();
+        }
+        catch (InvalidDataException) {
+            return "?";
+        }
+    }
 
     static byte[] BundledReShadeDll()
     {

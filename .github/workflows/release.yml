@@ -1,40 +1,58 @@
-name: Build ED-Overdrive
+# A published release (tag vX.Y.Z on main): build the add-on and the app with the add-on inside,
+# then attach ED-Overdrive.exe and EDAA-<version>.zip (for installing by hand) to the release.
+name: Release
 
-# A published release gets the exe attached. A manual run only builds it, as a test.
 on:
   release:
     types: [published]
-  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  build:
-    runs-on: windows-latest
+  release:
+    runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Get Streamline SDK
+        shell: pwsh
+        run: |
+          $url = "https://github.com/NVIDIA-RTX/Streamline/releases/download/v2.14.16/streamline-sdk-v2.14.16.zip"
+          Invoke-WebRequest -Uri $url -OutFile sl.zip
+          Expand-Archive sl.zip -DestinationPath edaa/third_party/streamline -Force
+
+      - name: Build add-on
+        id: edaa
+        shell: pwsh
+        run: |
+          $v = (Get-Content edaa/VERSION -TotalCount 1).Trim()
+          # Quoted: PowerShell would split -DEDAA_VERSION=0.7.0 at the first dot.
+          cmake -S edaa -B edaa/build -G "Visual Studio 17 2022" -A x64 "-DEDAA_VERSION=$v"
+          cmake --build edaa/build --config Release
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          ./edaa/tools/bundle.ps1 -Release edaa/build/Release -Out app/ThirdParty/EDAA.zip -Version $v
+          Copy-Item app/ThirdParty/EDAA.zip "EDAA-$v.zip"
+          "version=$v" >> $env:GITHUB_OUTPUT
+
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
-      - name: Build the exe
+
+      - name: Build app
         shell: pwsh
         run: |
-          $version = '0.1.0'
+          $version = '0.0.0'
           if ($env:TAG -match '^v?(\d+\.\d+\.\d+)') { $version = $Matches[1] }
-          dotnet publish tool/GenFrame.Setup/GenFrame.Setup.csproj -p:PublishProfile=Release -p:Version=$version
+          dotnet publish app/GenFrame.Setup.csproj -p:PublishProfile=Release -p:Version=$version
         env:
           TAG: ${{ github.event.release.tag_name }}
+
       - name: Attach to the release
-        if: github.event_name == 'release'
-        run: gh release upload "$env:TAG" tool/GenFrame.Setup/bin/publish/ED-Overdrive.exe --clobber
+        shell: pwsh
+        run: gh release upload "$env:TAG" app/bin/publish/ED-Overdrive.exe "EDAA-${{ steps.edaa.outputs.version }}.zip" --clobber
         env:
           TAG: ${{ github.event.release.tag_name }}
           GH_TOKEN: ${{ github.token }}
-      - name: Keep the test build
-        if: github.event_name != 'release'
-        uses: actions/upload-artifact@v4
-        with:
-          name: ED-Overdrive
-          path: tool/GenFrame.Setup/bin/publish/ED-Overdrive.exe
-          retention-days: 7

@@ -1,0 +1,74 @@
+# Every push and pull request: build the EDAA add-on and the app.
+# A push to main also publishes the add-on to the branch builds/main: the app's "Entwicklung" channel
+# installs it from there (raw files, readable without a token).
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # ReShade, ImGui, the DLSS and XeSS SDKs (shallow, at the pinned commits).
+          submodules: true
+
+      - name: Get Streamline SDK
+        shell: pwsh
+        run: |
+          $url = "https://github.com/NVIDIA-RTX/Streamline/releases/download/v2.14.16/streamline-sdk-v2.14.16.zip"
+          Invoke-WebRequest -Uri $url -OutFile sl.zip
+          Expand-Archive sl.zip -DestinationPath edaa/third_party/streamline -Force
+
+      - name: Build add-on
+        shell: pwsh
+        run: |
+          $base = (Get-Content edaa/VERSION -TotalCount 1).Trim()
+          $ref = "${{ github.head_ref || github.ref_name }}" -replace '[^A-Za-z0-9.-]', '-'
+          $v = "$base-$ref-$("${{ github.sha }}".Substring(0,7))"
+          cmake -S edaa -B edaa/build -G "Visual Studio 17 2022" -A x64 "-DEDAA_VERSION=$v"
+          cmake --build edaa/build --config Release
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          ./edaa/tools/bundle.ps1 -Release edaa/build/Release -Out app/ThirdParty/EDAA.zip -Version $v
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build app
+        shell: pwsh
+        run: dotnet publish app/GenFrame.Setup.csproj -p:PublishProfile=Release
+
+      - name: Publish add-on to builds/main
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force out/streamline | Out-Null
+          Copy-Item edaa/build/Release/EDAA.addon64, edaa/build/Release/nvngx_dlss.dll out/
+          foreach ($f in "sl.interposer.dll","sl.common.dll","sl.dlss_g.dll","sl.reflex.dll","sl.pcl.dll","nvngx_dlssg.dll") {
+            Copy-Item "edaa/build/Release/$f" out/streamline/
+          }
+          Set-Location out
+          git init -q
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          "${{ github.sha }}" | Out-File -Encoding ascii source_commit.txt
+          git add -A
+          git commit -q -m "Build of main at ${{ github.sha }}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" "HEAD:refs/heads/builds/main"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ED-Overdrive
+          path: |
+            app/bin/publish/ED-Overdrive.exe
+            app/ThirdParty/EDAA.zip
+          retention-days: 7

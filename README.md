@@ -1,7 +1,7 @@
 # ED-Overdrive
 
 Einrichtungs-Programm für **Elite Dangerous Odyssey** (DX11): installiert und pflegt
-[EDAA](https://github.com/CMDRForcer/EDAA) – Kantenglättung (NVIDIA DLAA, Intel XeSS, TAA) und echte
+[EDAA](edaa) – Kantenglättung (NVIDIA DLAA, Intel XeSS, TAA) und echte
 **DLSS Frame Generation** – samt ReShade, Filter-Set und optional **DLSS 5** (GITC Uplift).
 
 Eine Datei, keine Installation: `ED-Overdrive.exe` aus den [Releases](https://github.com/CMDRForcer/ED-Overdrive/releases)
@@ -12,7 +12,7 @@ herunterladen und starten. Die App bringt .NET mit.
 | Teil | In der exe | Lizenz |
 |---|---|---|
 | ReShade 6.8.0 (Add-on-Version, `dxgi.dll`) | ✅ | BSD-3-Clause |
-| EDAA (Add-on) | ✅ | MIT |
+| EDAA (Add-on, Quellcode in [`edaa/`](edaa)) | ✅ | MIT |
 | NVIDIA Streamline, DLSS (Super Resolution, Frame Generation) | ✅ als Teil von EDAA | NVIDIA RTX SDK / NGX SDK |
 | Intel XeSS | ✅ als Teil von EDAA | Intel Simplified Software License |
 | GITC Uplift 1.8.0 (DLSS 5) | ✅ | MIT |
@@ -21,7 +21,8 @@ herunterladen und starten. Die App bringt .NET mit.
 | `nvngx_dlssnr.dll` (DLSS 5) | ❌ wählst du selbst aus | NVIDIA, darf nicht weitergegeben werden |
 
 Die Installation von ReShade und EDAA braucht also **kein Internet**; nur die Filter und der Kanal
-„Entwicklung“ laden etwas herunter. Alle Lizenztexte stehen in [`licenses/`](licenses) und
+„Entwicklung“ laden etwas herunter. Jedes Release enthält außerdem `EDAA-<version>.zip` für die
+Installation von Hand (siehe [`edaa/README.md`](edaa/README.md)). Alle Lizenztexte stehen in [`licenses/`](licenses) und
 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md); bei der Installation legt die App sie zusätzlich in
 `ED-Overdrive-Lizenzen` im Spielordner ab.
 
@@ -48,7 +49,7 @@ Die Installation von ReShade und EDAA braucht also **kein Internet**; nur die Fi
 
 | Seite | Wofür |
 |---|---|
-| Übersicht | Spielordner, Installation, Kanal (Stabil = in der App enthalten, Entwicklung = neuester Build) |
+| Übersicht | Spielordner, Installation, Kanal (Stabil = in der App enthalten, Entwicklung = neuester Build aus `main`) |
 | Schnellwahl | Spiel-Setups und EDAA-Modi (DLAA + FG, nur DLAA, nur FG, aus) |
 | Filter | ReShade-Filter-Varianten (Natürlich, Lebendig, Leistung, DLSS 5) |
 | Grafik | Elite-Grafikwerte über das Spielmenü hinaus, vier Stufen |
@@ -66,13 +67,51 @@ Die Installation von ReShade und EDAA braucht also **kein Internet**; nur die Fi
 - EDHM/3DMigoto wird unterstützt. RenoDX mit Frame Generation gibt ein schwarzes Bild: im Overlay unter „Add-ons“ abschalten.
 - Die App schreibt nie in die Registry. Einzige Ausnahme ist die Seite „Presets“, nur auf Knopfdruck und mit Backup.
 
+## Aufbau des Repos
+
+| Ordner | Inhalt |
+|---|---|
+| [`app/`](app) | ED-Overdrive (WPF, .NET 10), eine exe ohne Installation |
+| [`edaa/`](edaa) | EDAA, das ReShade-Add-on (C++, CMake): TAA, DLAA, XeSS und DLSS Frame Generation |
+| [`docs/`](docs) | Recherche zur App (Treiberprofil-Werte, Quellen) |
+| [`licenses/`](licenses) | Lizenztexte aller mitgelieferten Teile |
+
+EDAA stammt von [Siegfried-Origin/EDAA](https://github.com/Siegfried-Origin/EDAA) (MIT). In diesem Repo kamen
+DLSS Frame Generation (Streamline), DLSS-Modellwahl und weitere Korrekturen dazu; die frühere Entwicklung steht im
+archivierten Fork [CMDRForcer/EDAA](https://github.com/CMDRForcer/EDAA).
+
 ## Bauen
 
+Voraussetzungen: Visual Studio 2022 mit C++, CMake 3.20+, Windows SDK, .NET 10 SDK.
+
 ```
-dotnet publish tool/GenFrame.Setup/GenFrame.Setup.csproj -p:PublishProfile=Release
+git clone --recurse-submodules --shallow-submodules https://github.com/CMDRForcer/ED-Overdrive.git
+cd ED-Overdrive
 ```
 
-Vor dem Bauen lädt `tool/GenFrame.Setup/ThirdParty/fetch-bundle.ps1` das EDAA-Release-Paket und den
-ReShade-Installer und prüft beide per SHA-256 (nicht im Git). Ein neues EDAA-Release: Version und Prüfsumme dort
-und in `InstallService.BundledEdaa` anpassen. Ein veröffentlichtes Release baut die exe per GitHub Actions
-(`.github/workflows/release.yml`) und hängt sie an.
+1. **Add-on** (optional, sonst nimmt der App-Build das EDAA-Paket aus dem neuesten Release):
+   ```
+   cmake -S edaa -B edaa/build -G "Visual Studio 17 2022" -A x64
+   cmake --build edaa/build --config Release
+   ```
+   Für Frame Generation vorher das [Streamline SDK 2.14.16](https://github.com/NVIDIA-RTX/Streamline/releases/tag/v2.14.16)
+   nach `edaa/third_party/streamline` entpacken.
+2. **App:**
+   ```
+   dotnet publish app/GenFrame.Setup.csproj -p:PublishProfile=Release
+   ```
+   Ergebnis: `app/bin/publish/ED-Overdrive.exe`. Vor dem Bauen holt `app/ThirdParty/fetch-bundle.ps1` den
+   ReShade-Installer (per SHA-256 geprüft) und packt EDAA aus `edaa/build/Release` in `app/ThirdParty/EDAA.zip`.
+   Liegt dort schon eine `EDAA.zip`, bleibt sie; zum Erneuern löschen.
+
+GitHub Actions baut bei jedem Push und Pull Request Add-on und App (`.github/workflows/build.yml`) und legt das
+Add-on von `main` in den Zweig `builds/main` (Kanal „Entwicklung“). Ein veröffentlichtes Release baut beides neu
+und hängt `ED-Overdrive.exe` und `EDAA-<version>.zip` an (`.github/workflows/release.yml`). Die EDAA-Version
+steht in `edaa/VERSION`.
+
+## Lizenz
+
+ED-Overdrive steht unter der [MIT-Lizenz](LICENSE). EDAA (MIT, Siegfried Origin) und alle mitgelieferten Teile
+behalten ihre eigenen Lizenzen, siehe [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md). NVIDIA, DLSS und
+GeForce RTX sind Marken der NVIDIA Corporation, Intel und XeSS der Intel Corporation, Elite Dangerous von
+Frontier Developments. ED-Overdrive ist kein offizielles Produkt dieser Firmen.

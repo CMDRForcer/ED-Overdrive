@@ -1,11 +1,11 @@
 # Third-party notices
 
-ED-Overdrive ships the following parts inside `ED-Overdrive.exe`. Their full license texts are in [`licenses/`](licenses);
+ED-Overdrive (MIT, see `LICENSE`) ships the following parts inside `ED-Overdrive.exe`. Their full license texts are in [`licenses/`](licenses);
 the app also copies them to `ED-Overdrive-Lizenzen` in the game folder when it installs.
 
 | Component | Version | Source | License | License file |
 |---|---|---|---|---|
-| EDAA | v0.7.0-cmdr1 | https://github.com/CMDRForcer/EDAA (fork of https://github.com/Siegfried-Origin/EDAA) | MIT | `EDAA-LICENSE.txt` |
+| EDAA | see `edaa/VERSION` | `edaa/` in this repository, based on https://github.com/Siegfried-Origin/EDAA | MIT, Copyright 2026 Siegfried Origin | `EDAA-LICENSE.txt` |
 | ReShade (add-on build, `ReShade64.dll`) | 6.8.0 | https://reshade.me, https://github.com/crosire/reshade | BSD-3-Clause, Copyright 2014 Patrick Mours | `ReShade-LICENSE.md` |
 | Dear ImGui (inside EDAA) | – | https://github.com/ocornut/imgui | MIT | `ImGui-LICENSE.txt` |
 | NVIDIA Streamline (`sl.*.dll`) | 2.14.16 | https://github.com/NVIDIAGameWorks/Streamline | MIT / NVIDIA RTX SDKs License | `NVIDIA-Streamline-LICENSE.txt`, `NVIDIA-RTX-SDKs-LICENSE.txt` |

@@ -3,7 +3,7 @@ using System.IO;
 
 namespace GenFrame.Setup.Services;
 
-// The tool only changes files while Elite is closed (see CLAUDE.md of the add-on).
+// The tool only changes files while Elite is closed.
 public static class GameState
 {
     public static bool IsRunning()
