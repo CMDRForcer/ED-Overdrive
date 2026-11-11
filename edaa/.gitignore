@@ -1,0 +1,10 @@
+analysis/
+build/
+build-*/
+captures/
+dist/
+*.dmp
+__pycache__/
+installer/Output/
+build.bat
+third_party/streamline/
