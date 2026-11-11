@@ -65,12 +65,12 @@ public sealed class GraphicsOptions(string graphicsFolder)
 
     // The two game setups (GameSetups). Not among the four buttons: they belong to a render scale.
     // DLSS 5: what was measured on 08.11.2026 (about 67 real -> 135 FPS at 0.85), Standard with jet cones and
-    // volumetrics on High, reflections 1024. Supersampling 1.5: shadows, effects, terrain and volumetrics lowered,
-    // textures, materials and view distance kept; 62 real -> 124 FPS with DLAA on 10.11.2026.
+    // volumetrics on High, reflections 1024. Supersampling 1.25: Frontier's Ultra with spot shadows on High (they cost
+    // most in concourses), no depth of field, reflections 1024; measured 11.11.2026, see GameSetups.
     public static readonly GraphicsPreset Dlss5Level = new("DLSS 5", "Grafik zum Spiel-Setup DLSS 5.",
         With(Level(4, 3, 3, 2, 2, 2, 3, 4, 3, "1.000000", 1024), (Jet, "2"), (Volumetrics, "2"), (Galaxy, "8192")));
-    public static readonly GraphicsPreset SupersamplingLevel = new("Supersampling 1,5", "Grafik zum Spiel-Setup Supersampling 1,5.",
-        With(Level(2, 3, 1, 1, 0, 2, 2, 4, 1, "1.000000", 1024), (Jet, "1"), (Volumetrics, "0"), (Galaxy, "4096")));
+    public static readonly GraphicsPreset SupersamplingLevel = new("Supersampling 1,25", "Grafik zum Spiel-Setup Supersampling 1,25.",
+        With(Level(4, 3, 3, 2, 0, 2, 3, 4, 3, "1.000000", 1024), ("SpotShadowQuality", "3"), (Galaxy, "8192")));
 
     static GraphicsOption OptionFor(string key) =>
         All.FirstOrDefault(o => o.Key == key) ?? new GraphicsOption(0, key, "", [], Tag: key);

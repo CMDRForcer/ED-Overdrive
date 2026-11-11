@@ -89,7 +89,7 @@ static class Dlss5Page
         page.Children.Add(Ui.Buttons([.. buttons]));
         if (state.Installed) {
             page.Children.Add(Ui.Muted("Ein- und Ausschalten ändert nur DLSS 5. Für den ganzen Wechsel samt Auflösung, Grafik und Filter: " +
-                "„Schnellwahl“ → Spiel-Setup „DLSS 5“ oder „Supersampling 1,5“.", 4));
+                "„Schnellwahl“ → Spiel-Setup „DLSS 5“ oder „Supersampling 1,25“.", 4));
         }
         page.Children.Add(Ui.Muted("Optimieren: EDAA auf DLSS, Elite rendert mit 0,85 und DLSS 5 läuft vor dem Hochskalieren (spart Rechenzeit), " +
             "Gesichtsmaske aus, Filter „DLSS 5“ statt „Lebendig“. Feinjustieren im Spiel unter Pos1 → GITC Uplift → Look.", 0));

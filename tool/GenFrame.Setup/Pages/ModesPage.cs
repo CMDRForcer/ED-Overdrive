@@ -60,9 +60,9 @@ static class ModesPage
         var current = GameSetups.Current(game);
         var dlss5 = GameSetups.Dlss5Installed(game);
         var cards = new WrapPanel();
-        cards.Children.Add(SetupCard(window, game, GameSetup.Supersampling, "Supersampling 1,5",
-            "Elite rendert größer, DLAA glättet. Sehr ruhiges Bild, Grafik dafür etwas reduziert. " +
-            "Gemessen auf einer RTX 4070 Ti: 62 echte → 124 Bilder/s.", current, true));
+        cards.Children.Add(SetupCard(window, game, GameSetup.Supersampling, "Supersampling 1,25",
+            "Elite rendert größer, DLAA glättet. Ruhiges Bild mit Ultra-Grafik (Lampenschatten High, ohne Tiefenunschärfe). " +
+            "Gemessen auf einer RTX 4070 Ti: 70 echte → 140 Bilder/s, im vollen Concourse etwa 65.", current, true));
         cards.Children.Add(SetupCard(window, game, GameSetup.Dlss5, "DLSS 5",
             dlss5 ? "Elite rendert mit 0,85, DLSS 5 verbessert das Bild, DLSS skaliert hoch. Grafik höher. " +
                 "Gemessen auf einer RTX 4070 Ti: etwa 67 echte → 135 Bilder/s."

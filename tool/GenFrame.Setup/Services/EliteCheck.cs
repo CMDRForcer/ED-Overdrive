@@ -77,7 +77,7 @@ public sealed partial class EliteCheck(GameInstall game, string graphicsFolder)
                 var dlss5 = File.Exists(Path.Combine(game.Folder, "gitc-uplift.addon64"));
                 var setup = Math.Abs(ss - GameSetups.SupersamplingScale) < 0.001 && !UpliftService.Read(game).Enabled;
                 var why = setup
-                    ? "So gewollt mit dem Spiel-Setup „Supersampling 1,5“ (Grafik reduziert). Gemessen auf einer RTX 4070 Ti mit DLAA: 62 echte → 124 Bilder/s."
+                    ? "So gewollt mit dem Spiel-Setup „Supersampling 1,25“. Gemessen auf einer RTX 4070 Ti mit DLAA und Ultra-Grafik: 70 echte → 140 Bilder/s, im vollen Concourse etwa 65."
                     : ss > 1
                     ? "Das kostet viel Leistung. Gemessen auf einer RTX 4070 Ti: Bei 1,0 sind es etwa 68 echte Bilder, bei 1,25 in Stationen etwa 57, bei 2,0 nur noch 3–6."
                     : dlss5 && method == "1" ? "So gewollt mit DLSS 5: Elite rendert kleiner, DLSS 5 rechnet in dieser Größe, DLSS skaliert hoch."

@@ -10,8 +10,9 @@ public enum GameSetup { Supersampling, Dlss5 }
 // DLSS 5 off or 1.5 with DLSS 5 on (10.11.2026). Filter fine-tuning and the other EDAA values stay.
 public static class GameSetups
 {
-    // Measured 10.11.2026 on an RTX 4070 Ti in 1440p with DLAA (preset M): 62 real -> 124 FPS, DLAA 7.4 ms of 15.9 ms.
-    public const double SupersamplingScale = 1.5;
+    // Measured 11.11.2026 on an RTX 4070 Ti in 1440p with DLAA (model K, 1.5 ms) and Ultra graphics: 70 real -> 140 FPS
+    // (the frame limit) in space, asteroid field and hangar, about 65 real in a busy concourse. 1.5 needed lower graphics.
+    public const double SupersamplingScale = 1.25;
 
     // Resolve before the HUD pass. Without it EDAA resolves at the bloom pass, and with the lowered bloom of the
     // supersampling graphics that pass was not found (10.11.2026: "resolve point not reached ... bloom no"):
@@ -67,10 +68,10 @@ public static class GameSetups
             UpliftService.SetEnabled(game, false);
             log("DLSS 5 aus (bleibt installiert).");
         }
-        // DLAA at the full 1.5x size; the DLAA model the user picked stays.
+        // DLAA at the full supersampled size; the DLAA model the user picked stays.
         AddonSettings.Write(game, new Dictionary<string, string>(BeforeHud) { ["aa_method"] = "1" });
         EliteCheck.SetXml(CustomXml, "SSAAMultiplier", SupersamplingScale.ToString("0.000000", CultureInfo.InvariantCulture));
-        log("Elite rendert mit 1,5, EDAA glättet mit DLAA.");
+        log("Elite rendert mit 1,25, EDAA glättet mit DLAA.");
         graphics.Write(GraphicsOptions.Values(GraphicsOptions.SupersamplingLevel));
         log($"Grafik: „{GraphicsOptions.SupersamplingLevel.Name}“.");
         if (FilterService.Active(game) == FilterVariant.Dlss5) {
