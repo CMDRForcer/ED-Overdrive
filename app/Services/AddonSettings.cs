@@ -26,6 +26,8 @@ public static class AddonSettings
         new("Frame Generation", "fg_fps_limit", "Bildlimit (angezeigte FPS, 0 = aus)", "Knapp unter der Bildwiederholrate, zum Beispiel 140 bei 144 Hz. Keinen zweiten Limiter nutzen.", SettingKind.Whole, "140", 0, 360),
         new("Kantenglättung", "dlss_preset", "DLAA-Modell", "Das Modell, das EDAA bei NVIDIA anfordert.", SettingKind.Choice, "11", Choices: DlaaModels),
         new("Kantenglättung", "taa_before_hud", "Vor dem HUD glätten", "An: FG-HUD-Schutz voll, das HUD bleibt aber ungeglättet. Aus: HUD geglättet, FG-HUD-Schutz schwächer.", SettingKind.Toggle, "1"),
+        new("Kantenglättung", "hud_learn", "Cockpit-HUD an den Panel-Texturen erkennen", "Nötig, wenn EDHM die HUD-Shader ersetzt: sonst wirken HUD-Maske und FG-HUD-Schutz nicht.", SettingKind.Toggle, "1"),
+        new("Kantenglättung", "hud_motion", "Cockpit-HUD bewegt sich mit dem Cockpit", "Panels bleiben bei Kopf- und Schiffsbewegung scharf. Wirkt nur beim Hochskalieren (unter 1,0).", SettingKind.Toggle, "1"),
         new("Hochskalieren (nur unter 1,0 Supersampling)", "game_upscale", "Hochskalieren dem Spiel überlassen", "", SettingKind.Toggle, "0"),
         new("Hochskalieren (nur unter 1,0 Supersampling)", "upscale_sharpness", "Schärfe bei TAA-Hochskalierung", "", SettingKind.Real, "0.5", 0, 1),
         new("Hochskalieren (nur unter 1,0 Supersampling)", "upscale_hud_mask", "HUD ohne Nachzieher", "", SettingKind.Toggle, "1"),
@@ -103,6 +105,8 @@ public static class AddonSettings
             values["motion_enabled"] = "1";
             values["fg_hud_protect"] = "1";
             values["taa_before_hud"] = "1";
+            values["hud_learn"] = "1";
+            values["hud_motion"] = "1";
         }
         return values;
     }

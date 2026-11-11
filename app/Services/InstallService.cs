@@ -212,8 +212,11 @@ public sealed class InstallService(GameInstall game, Action<string> log)
     }
 
     // docs/plan.md: DLAA, model K, full FG HUD protection, frame generation on.
+    // hud_learn/hud_motion: find the cockpit HUD by its panel textures (EDHM replaces the HUD shaders) and give the
+    // panels the cockpit's motion; sharp panels in motion, ~0.05 ms (edaa/docs/fg-notes.md).
     static readonly (string Key, string Value)[] Defaults = [
         ("aa_method", "1"), ("dlss_preset", "11"), ("taa_before_hud", "1"), ("fg_hud_protect", "1"),
+        ("hud_learn", "1"), ("hud_motion", "1"),
         ("fg_present_test", "1"), ("fg_factory", "1"), ("fg_generate", "1"), ("fg_fps_limit", "140"),
     ];
 
