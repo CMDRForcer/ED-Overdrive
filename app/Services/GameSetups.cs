@@ -17,7 +17,10 @@ public static class GameSetups
     // Resolve before the HUD pass. Without it EDAA resolves at the bloom pass, and with the lowered bloom of the
     // supersampling graphics that pass was not found (10.11.2026: "resolve point not reached ... bloom no"):
     // no DLSS call, so DLSS 5 waited ("Waiting for DLSS").
-    static readonly Dictionary<string, string> BeforeHud = new() { ["taa_before_hud"] = "1" };
+    // With it the cockpit HUD found by its panel textures (EDHM) and moving with the cockpit: sharp panels in motion.
+    static readonly Dictionary<string, string> BeforeHud = new() {
+        ["taa_before_hud"] = "1", ["hud_learn"] = "1", ["hud_motion"] = "1",
+    };
 
     static string CustomXml => Path.Combine(EliteCheck.DefaultGraphicsFolder, "Custom.4.4.fxcfg");
 
