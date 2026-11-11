@@ -2,3 +2,6 @@ bin/
 obj/
 *.user
 .vs/
+tool/GenFrame.Setup/ThirdParty/EDAA.zip
+tool/GenFrame.Setup/ThirdParty/ReShade_Setup_Addon.exe
+*.part

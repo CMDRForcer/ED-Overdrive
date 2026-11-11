@@ -43,7 +43,7 @@ public static class AppSettings
 
     // Development until a release contains the Steam overlay fix (1a8f6a2); the newest release
     // (v0.5.2-cmdr1) crashes in gameoverlayrenderer64.dll.
-    public static Channel LoadChannel() => Load().Channel ?? Channel.Development;
+    public static Channel LoadChannel() => Load().Channel ?? Channel.Stable; // stable ships inside the app
 
     public static void SaveChannel(Channel channel) => Save(Load() with { Channel = channel });
 }

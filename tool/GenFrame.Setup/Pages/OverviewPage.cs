@@ -59,7 +59,7 @@ static class OverviewPage
         }
 
         var channel = new ComboBox { Width = 230, Margin = new Thickness(0, 14, 0, 0), HorizontalAlignment = HorizontalAlignment.Left };
-        channel.Items.Add("Stabil (neuestes Release)");
+        channel.Items.Add($"Stabil (EDAA {InstallService.BundledEdaa}, in der App)");
         channel.Items.Add("Entwicklung (neuester Build)");
         channel.SelectedIndex = AppSettings.LoadChannel() == Channel.Development ? 1 : 0;
         channel.SelectionChanged += (_, _) => AppSettings.SaveChannel(channel.SelectedIndex == 1 ? Channel.Development : Channel.Stable);

@@ -9,17 +9,18 @@ namespace GenFrame.Setup.Services;
 
 public enum Channel { Stable, Development }
 
-// Installs ReShade (add-on build), EDAA and Streamline into the game folder.
-// Sources: see docs/tool-research.md.
+// Installs ReShade (add-on build), EDAA and Streamline into the game folder. Both ship inside the exe
+// (ThirdParty/fetch-bundle.ps1, pinned by hash), so installing needs no internet; only the development
+// channel and the filters download. Sources: see docs/tool-research.md and THIRD_PARTY_NOTICES.md.
 public sealed class InstallService(GameInstall game, Action<string> log)
 {
-    // ReShade with full add-on support. The build is unsigned, so the download is pinned by hash.
-    const string ReShadeVersion = "6.8.0";
-    const string ReShadeUrl = "https://reshade.me/downloads/ReShade_Setup_6.8.0_Addon.exe";
-    const string ReShadeSha256 = "afe4c8f13048306307983b8b3d41d5bf00a86820440b0e57dea10950e1176445";
+    // Keep in step with ThirdParty/fetch-bundle.ps1 (which pins both by SHA-256).
+    public const string BundledReShade = "6.8.0";
+    public const string BundledEdaa = "v0.7.0-cmdr1";
+    public const string LicenseFolder = "ED-Overdrive-Lizenzen";
 
     const string Repository = "CMDRForcer/EDAA";
-    const string DevBranch = "builds/feature/fg-phase2";
+    const string DevBranch = "builds/cmdr/stable"; // CI build of every merge, before the next release
     const string AddonName = "EDAA.addon64";
 
     static readonly string[] PackageFiles = [
@@ -41,9 +42,8 @@ public sealed class InstallService(GameInstall game, Action<string> log)
         EnsureGameClosed();
         Directory.CreateDirectory(DownloadFolder);
 
-        // Download everything first: a broken connection must not leave a half-installed game.
-        var reshade = await DownloadReShade();
-        var package = await DownloadPackage();
+        var reshade = BundledReShadeDll();
+        // Download first: a broken connection must not leave a half-installed game.
         (string Folder, string Commit)? dev = channel == Channel.Development ? await DownloadDevBuild() : null;
 
         EnsureGameClosed();
@@ -59,15 +59,23 @@ public sealed class InstallService(GameInstall game, Action<string> log)
         }
 
         File.WriteAllBytes(Path.Combine(game.Folder, "dxgi.dll"), reshade);
-        log($"ReShade {ReShadeVersion} (Add-on-Version) installiert.");
+        log($"ReShade {BundledReShade} (Add-on-Version) installiert.");
 
-        using (var zip = ZipFile.OpenRead(package)) {
+        using (var zip = new ZipArchive(Resource("EDAA.zip"))) {
             foreach (var name in PackageFiles) {
                 var entry = zip.GetEntry(name) ?? throw new InvalidDataException($"{name} fehlt im Paket.");
                 entry.ExtractToFile(Path.Combine(game.Folder, name), overwrite: true);
             }
+            // The licenses of everything the package brings (EDAA, ReShade, Streamline, DLSS, XeSS, ImGui).
+            var licenses = Path.Combine(game.Folder, LicenseFolder);
+            Directory.CreateDirectory(licenses);
+            foreach (var entry in zip.Entries.Where(e => e.Name.Length > 0 &&
+                         (e.FullName.StartsWith("licenses/") || e.FullName is "LICENSE" or "THIRD_PARTY_NOTICES.md"))) {
+                var name = entry.FullName == "LICENSE" ? "EDAA-LICENSE.txt" : entry.Name;
+                entry.ExtractToFile(Path.Combine(licenses, name), overwrite: true);
+            }
         }
-        log("EDAA-Paket installiert (DLAA, XeSS, Streamline).");
+        log($"EDAA {BundledEdaa} installiert (DLAA, XeSS, Streamline), aus der App. Lizenzen in „{LicenseFolder}“.");
 
         if (dev != null) {
             foreach (var file in Directory.EnumerateFiles(dev.Value.Folder)) {
@@ -94,20 +102,18 @@ public sealed class InstallService(GameInstall game, Action<string> log)
         }
     }
 
-    async Task<byte[]> DownloadReShade()
+    static Stream Resource(string name) =>
+        typeof(InstallService).Assembly.GetManifestResourceStream(name)
+            ?? throw new InvalidDataException($"{name} fehlt in dieser App-Version.");
+
+    static byte[] BundledReShadeDll()
     {
-        var file = Path.Combine(DownloadFolder, Path.GetFileName(ReShadeUrl));
-        if (!File.Exists(file) || Sha256(file) != ReShadeSha256) {
-            log($"Lade ReShade {ReShadeVersion} …");
-            await DownloadTo(ReShadeUrl, file);
-        }
-        if (Sha256(file) != ReShadeSha256) {
-            File.Delete(file);
-            throw new InvalidDataException("Der ReShade-Download hat eine unerwartete Prüfsumme und wurde verworfen.");
-        }
+        using var installer = Resource("ReShade_Setup.exe");
+        using var copy = new MemoryStream();
+        installer.CopyTo(copy);
 
         // Same as the ReShade installer: a zip is appended to the executable, starting at a 512-byte block.
-        var data = File.ReadAllBytes(file);
+        var data = copy.ToArray();
         for (int offset = 0; offset + 30 <= data.Length; offset += 512) {
             if (data[offset] == 0x50 && data[offset + 1] == 0x4B && data[offset + 2] == 0x03 && data[offset + 3] == 0x04
                 && data.AsSpan(offset + 4, 26).IndexOfAnyExcept((byte)0) >= 0) {
@@ -120,30 +126,6 @@ public sealed class InstallService(GameInstall game, Action<string> log)
             }
         }
         throw new InvalidDataException("Im ReShade-Installer wurde kein Archiv gefunden.");
-    }
-
-    // Newest published release (pre-releases included: the cmdr releases are pre-releases).
-    async Task<string> DownloadPackage()
-    {
-        using var doc = JsonDocument.Parse(await http.GetStringAsync($"https://api.github.com/repos/{Repository}/releases"));
-        foreach (var release in doc.RootElement.EnumerateArray()) {
-            if (release.GetProperty("draft").GetBoolean()) {
-                continue;
-            }
-            foreach (var asset in release.GetProperty("assets").EnumerateArray()) {
-                var name = asset.GetProperty("name").GetString()!;
-                if (name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)) {
-                    var file = Path.Combine(DownloadFolder, name);
-                    if (!File.Exists(file) || new FileInfo(file).Length != asset.GetProperty("size").GetInt64()) {
-                        log($"Lade {name} …");
-                        await DownloadTo(asset.GetProperty("browser_download_url").GetString()!, file);
-                    }
-                    log($"Paket: {release.GetProperty("tag_name").GetString()}");
-                    return file;
-                }
-            }
-        }
-        throw new InvalidDataException("Kein Release-Paket gefunden.");
     }
 
     async Task<(string Folder, string Commit)> DownloadDevBuild()

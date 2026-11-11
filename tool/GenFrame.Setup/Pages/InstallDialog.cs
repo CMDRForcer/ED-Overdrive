@@ -81,7 +81,7 @@ sealed class InstallDialog : Window
         dialog.Loaded += async (_, _) => {
             try {
                 dialog.Log($"Spielordner: {game.Folder}");
-                dialog.Log($"Kanal: {(channel == Channel.Stable ? "Stabil (neuestes Release)" : "Entwicklung (neuester Build)")}");
+                dialog.Log($"Kanal: {(channel == Channel.Stable ? $"Stabil (EDAA {InstallService.BundledEdaa}, in der App)" : "Entwicklung (neuester Build)")}");
                 await Task.Run(() => new InstallService(game, dialog.Log).Install(channel, clean));
             }
             catch (Exception e) {

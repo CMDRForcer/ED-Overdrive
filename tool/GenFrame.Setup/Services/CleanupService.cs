@@ -13,7 +13,7 @@ public static class CleanupService
         "renodx-dlss5*", "dlss5-*", "DLSS5*", "RenoDX-DLSS5*", "gitc-uplift*",
     ];
     // GITC-Uplift: DLSS 5 comes back with one click on its page, the DLL is kept in the app's folder.
-    static readonly string[] FolderNames = ["reshade-shaders", "GITC-Uplift"];
+    static readonly string[] FolderNames = ["reshade-shaders", "GITC-Uplift", InstallService.LicenseFolder];
 
     // Never touched, even if a pattern above would match.
     static readonly string[] Keep = ["renodx-elitedangerous.addon64", "d3d11.dll", "d3dx.ini", "d3dcompiler_47.dll"];
