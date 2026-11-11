@@ -115,7 +115,7 @@ public sealed class InstallService(GameInstall game, Action<string> log)
             using var zip = new ZipArchive(Resource("EDAA.zip"));
             var entry = zip.GetEntry("version.txt");
             if (entry == null) {
-                return "0.7.0"; // packages from before version.txt (CMDRForcer/EDAA v0.7.0-cmdr1)
+                return "0.7.0"; // packages from before version.txt (EDAA v0.7.0-cmdr1)
             }
             using var reader = new StreamReader(entry.Open());
             return reader.ReadToEnd().Trim();

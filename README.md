@@ -90,8 +90,7 @@ Die unsignierten Builds sind von NVIDIAs Datei abgeleitet und nicht von NVIDIA f
 | [`licenses/`](licenses) | Lizenztexte aller mitgelieferten Teile |
 
 EDAA stammt von [Siegfried-Origin/EDAA](https://github.com/Siegfried-Origin/EDAA) (MIT). In diesem Repo kamen
-DLSS Frame Generation (Streamline), DLSS-Modellwahl und weitere Korrekturen dazu; die frühere Entwicklung steht im
-archivierten Fork [CMDRForcer/EDAA](https://github.com/CMDRForcer/EDAA).
+DLSS Frame Generation (Streamline), DLSS-Modellwahl und weitere Korrekturen dazu (übernommen auf dem Stand EDAA 0.7.0).
 
 ## Bauen
 
