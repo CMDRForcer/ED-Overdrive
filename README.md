@@ -34,6 +34,19 @@ Installation von Hand (siehe [`edaa/README.md`](edaa/README.md)). Alle Lizenztex
 - Für DLSS 5: die passende `nvngx_dlssnr.dll` (RTX 50: NVIDIA-Original; RTX 20/30/40: angepasster Community-Build,
   unsigniert, auf eigenes Risiko)
 
+### Welche `nvngx_dlssnr.dll` wir für DLSS 5 nutzen
+
+Die Datei liegt nicht bei und darf nicht weitergegeben werden. Die App erkennt bekannte Versionen an der SHA-256
+und zeigt sie auf der Seite „DLSS 5“ an.
+
+| Datei | Version | Größe | SHA-256 | Status |
+|---|---|---|---|---|
+| Community-Build „compat-fp16“ (unsigniert) | 310.9.16 | 276 MB | `cdfa6c1ec784867182164c7836f324f087b5c9f374d0c9fe46f54999feabf3ed` | **unsere Wahl**: getestet auf RTX 4070 Ti mit GITC Uplift 1.8.0, Netz „Small FP8“, ~67 → 135 Bilder/s |
+| angepasster Build für RTX 20/30/40 (RenoDX-Discord) | 310.8 | 166 MB | `e67dee209320cdafe0e93e45675d7aa34323a53acc57a72b2e40a181581c989a` | läuft, kann aber nur das Netz „Legacy“ (langsamer, ~56 echte Bilder/s) |
+| NVIDIA-Original | 310.9.x | – | – | nur RTX 50, von uns nicht getestet |
+
+Die unsignierten Builds sind von NVIDIAs Datei abgeleitet und nicht von NVIDIA freigegeben: Nutzung auf eigenes Risiko.
+
 ## So geht's
 
 1. **Elite beenden.** Die App ändert nur bei geschlossenem Spiel etwas und legt vorher immer ein Backup an.
