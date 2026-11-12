@@ -18,7 +18,12 @@ public static class BackupService
     public static Backup Create(string label, IEnumerable<string> files)
     {
         var created = DateTime.Now;
-        var folder = Path.Combine(Root, created.ToString("yyyyMMdd-HHmmss"));
+        // Two backups in one second (the advisor's, then the game setup's) get "-2", "-3": each keeps its own files.
+        var stamp = created.ToString("yyyyMMdd-HHmmss");
+        var folder = Path.Combine(Root, stamp);
+        for (var n = 2; Directory.Exists(folder); n++) {
+            folder = Path.Combine(Root, $"{stamp}-{n}");
+        }
         Directory.CreateDirectory(folder);
 
         var stored = new List<BackupFile>();
