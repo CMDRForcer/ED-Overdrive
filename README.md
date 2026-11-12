@@ -63,6 +63,7 @@ Die unsignierten Builds sind von NVIDIAs Datei abgeleitet und nicht von NVIDIA f
 | Seite | Wofür |
 |---|---|
 | Übersicht | Spielordner, Installation, Kanal (Stabil = in der App enthalten, Entwicklung = neuester Build aus `main`) |
+| Berater | schlägt EDAA-Modus, Bildlimit, Spiel-Setup und Grafikstufe für diesen PC vor; neu, unter „Übersicht“ einschalten |
 | Schnellwahl | Spiel-Setups und EDAA-Modi (DLAA + FG, nur DLAA, nur FG, aus) |
 | Filter | ReShade-Filter-Varianten (Natürlich, Lebendig, Leistung, DLSS 5) |
 | Grafik | Elite-Grafikwerte über das Spielmenü hinaus, vier Stufen |

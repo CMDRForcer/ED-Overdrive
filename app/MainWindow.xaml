@@ -22,6 +22,7 @@
 
         <StackPanel Grid.Row="1" Margin="0,0,12,0" x:Name="Navigation">
             <RadioButton Style="{StaticResource NavButton}" Content="Übersicht" Tag="overview" IsChecked="True" Checked="OnNavigate"/>
+            <RadioButton Style="{StaticResource NavButton}" Content="Berater" Tag="advisor" Checked="OnNavigate"/>
             <RadioButton Style="{StaticResource NavButton}" Content="Schnellwahl" Tag="modes" Checked="OnNavigate"/>
             <RadioButton Style="{StaticResource NavButton}" Content="Filter" Tag="filters" Checked="OnNavigate"/>
             <RadioButton Style="{StaticResource NavButton}" Content="Grafik" Tag="graphics" Checked="OnNavigate"/>

@@ -20,6 +20,7 @@ public partial class MainWindow : Window
         foreach (var item in Navigation.Children.OfType<RadioButton>().Where(b => Vendor.Amd && b.Tag is "dlss5" or "presets").ToList()) {
             Navigation.Children.Remove(item);
         }
+        UpdateAdvisorVisibility();
         UpdateGameState();
         gameStateTimer.Tick += (_, _) => UpdateGameState();
         gameStateTimer.Start();
@@ -37,6 +38,14 @@ public partial class MainWindow : Window
 
     public void Refresh() => ShowPage(currentPage);
 
+    // The advisor's navigation entry follows the switch under "Übersicht" (default off).
+    public void UpdateAdvisorVisibility()
+    {
+        foreach (var item in Navigation.Children.OfType<RadioButton>().Where(b => b.Tag is "advisor")) {
+            item.Visibility = AppSettings.LoadShowAdvisor() ? Visibility.Visible : Visibility.Collapsed;
+        }
+    }
+
     void OnNavigate(object sender, RoutedEventArgs e)
     {
         if (sender is RadioButton { Tag: string page } && PageHost != null) {
@@ -50,6 +59,7 @@ public partial class MainWindow : Window
         PageHost.Content = page switch {
             "overview" => OverviewPage.Build(this),
             "backups" => BackupsPage.Build(this),
+            "advisor" => AdvisorPage.Build(this),
             "modes" => ModesPage.Build(this),
             "filters" => FilterPage.Build(this),
             "graphics" => GraphicsPage.Build(this),
