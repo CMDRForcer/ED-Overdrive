@@ -92,6 +92,10 @@ namespace edaa
         bool hud_learn = false; // find the cockpit HUD shader by the HUD panel textures it reads (shader replaced, e.g. EDHM)
         bool taa_soft_offscreen = true; // reuse the edge of the history for pixels entering the screen
         bool taa_sharp = false; // sharper native TAA: samples near the pixel centre count more, output sharpened 0.6 (docs/replay.md study)
+        bool spec_stable = false; // glint stabiliser after DLAA / XeSS / FSR: blinking glints blended with the last frame (ps_spec_stable)
+        float spec_stable_strength = 0.8f; // share of the last frame on a glint
+        float spec_stable_contrast = 0.02f; // how much brighter than its neighbourhood a glint is (compressed HDR)
+        float spec_stable_clip = 1.5f; // last frame limited to the neighbourhood's range widened by this many standard deviations
         float taa_hdr_scale = 30.0f; // scene values are multiplied by this before the HDR compression c/(1+c) (30: chosen in game)
 
         bool motion_enabled = true;
