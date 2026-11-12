@@ -6,7 +6,7 @@ namespace GenFrame.Setup.Services;
 // The tool's own settings (chosen game folder, install channel), kept next to the backups.
 public static class AppSettings
 {
-    sealed record Data(string? GameFolder, GameStore? Store, Channel? Channel);
+    sealed record Data(string? GameFolder, GameStore? Store, Channel? Channel, bool? ShowAdvisor = null);
 
     static string FilePath => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "GenFrame", "settings.json");
@@ -46,4 +46,9 @@ public static class AppSettings
     public static Channel LoadChannel() => Load().Channel ?? Channel.Stable; // stable ships inside the app
 
     public static void SaveChannel(Channel channel) => Save(Load() with { Channel = channel });
+
+    // The advisor page (AdvisorPage) is new: hidden until switched on under "Übersicht".
+    public static bool LoadShowAdvisor() => Load().ShowAdvisor ?? false;
+
+    public static void SaveShowAdvisor(bool show) => Save(Load() with { ShowAdvisor = show });
 }

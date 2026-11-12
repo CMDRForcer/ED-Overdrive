@@ -67,6 +67,17 @@ static class OverviewPage
         page.Children.Add(channel);
         Channel Selected() => channel.SelectedIndex == 1 ? Channel.Development : Channel.Stable;
 
+        // The advisor is new, so it is off until switched on here.
+        var advisor = new CheckBox {
+            Content = "Berater anzeigen (schlägt Einstellungen für diesen PC vor)", IsChecked = AppSettings.LoadShowAdvisor(),
+            Foreground = Ui.Brush("TextBrush"), Margin = new Thickness(0, 12, 0, 0),
+        };
+        advisor.Click += (_, _) => {
+            AppSettings.SaveShowAdvisor(advisor.IsChecked == true);
+            window.UpdateAdvisorVisibility();
+        };
+        page.Children.Add(advisor);
+
         page.Children.Add(Ui.Buttons(
             Ui.Button("Installieren / Aktualisieren", (_, _) => InstallDialog.Run(window, game, Selected(), clean: false), primary: true),
             Ui.Button("Sauber neu installieren", (_, _) => InstallDialog.Run(window, game, Selected(), clean: true)),
