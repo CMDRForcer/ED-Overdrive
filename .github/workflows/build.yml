@@ -45,7 +45,7 @@ jobs:
 
       - name: Build app
         shell: pwsh
-        run: dotnet publish app/GenFrame.Setup.csproj -p:PublishProfile=Release
+        run: dotnet publish app/GenFrame.Setup.csproj -p:PublishProfile=Release -p:Vendor=nvidia
 
       - name: Publish add-on to builds/main
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -69,6 +69,6 @@ jobs:
         with:
           name: ED-Overdrive
           path: |
-            app/bin/publish/ED-Overdrive.exe
+            app/bin/publish/ED-Overdrive-NVIDIA.exe
             app/ThirdParty/EDAA.zip
           retention-days: 7

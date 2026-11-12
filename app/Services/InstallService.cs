@@ -26,9 +26,10 @@ public sealed class InstallService(GameInstall game, Action<string> log)
     const string DevBranch = "builds/main"; // CI build of every push to main, before the next release
     const string AddonName = "EDAA.addon64";
 
+    // AMD build: no NVIDIA DLLs in the package (edaa/docs/vendors.md).
     static readonly string[] PackageFiles = [
-        AddonName, "nvngx_dlss.dll", "nvngx_dlssg.dll", "libxess.dll",
-        "sl.common.dll", "sl.dlss_g.dll", "sl.interposer.dll", "sl.pcl.dll", "sl.reflex.dll",
+        AddonName, "libxess.dll",
+        .. (Vendor.Nvidia ? new[] { "nvngx_dlss.dll", "nvngx_dlssg.dll", "sl.common.dll", "sl.dlss_g.dll", "sl.interposer.dll", "sl.pcl.dll", "sl.reflex.dll" } : Array.Empty<string>()),
     ];
     static readonly string[] DevFiles = [
         AddonName, "streamline/nvngx_dlssg.dll", "streamline/sl.common.dll", "streamline/sl.dlss_g.dll",
@@ -78,7 +79,9 @@ public sealed class InstallService(GameInstall game, Action<string> log)
                 entry.ExtractToFile(Path.Combine(licenses, name), overwrite: true);
             }
         }
-        log($"EDAA {BundledEdaa} installiert (DLAA, XeSS, Streamline), aus der App. Lizenzen in „{LicenseFolder}“.");
+        log(Vendor.Amd
+            ? $"EDAA {BundledEdaa} für AMD installiert (EDAA TAA, XeSS), aus der App. Lizenzen in „{LicenseFolder}“."
+            : $"EDAA {BundledEdaa} installiert (DLAA, XeSS, Streamline), aus der App. Lizenzen in „{LicenseFolder}“.");
 
         if (dev != null) {
             foreach (var file in Directory.EnumerateFiles(dev.Value.Folder)) {
@@ -202,10 +205,15 @@ public sealed class InstallService(GameInstall game, Action<string> log)
             ini.Set("OVERLAY", "TutorialProgress", "4");
         }
 
+        // Radeon (or the AMD build): no DLSS, the EDAA TAA instead of DLSS falling back to it.
+        var amd = Vendor.Amd || GpuInfo.PrimaryVendor() == GpuVendor.Amd;
         foreach (var (key, value) in Defaults) {
             if (clean || ini.Get("EDAA", key) == null) {
-                ini.Set("EDAA", key, value);
+                ini.Set("EDAA", key, key == "aa_method" && amd ? "0" : value);
             }
+        }
+        if (amd) {
+            log("AMD-Grafikkarte erkannt: Kantenglättung mit EDAA TAA.");
         }
         ini.Save(path);
         log(clean ? "ReShade.ini mit Standardwerten neu angelegt." : "ReShade.ini ergänzt (deine Werte bleiben).");

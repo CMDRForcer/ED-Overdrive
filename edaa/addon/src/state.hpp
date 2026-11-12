@@ -23,6 +23,7 @@ namespace edaa
         temporal_change = 6, // how much the TAA output changed since the last frame (flicker finder, camera still)
         hud_mask = 7, // upscaling: where the cockpit HUD was found (DLSS uses the current frame there)
         reactive = 8, // DLSS/XeSS reactive mask: where transparents changed the scene (particles, glass, glows)
+        ship_auto = 9, // automatic own-ship detection (moves with the camera), compared with the game stencil
     };
 
     // Which resolve replaces the game's anti-aliasing.
@@ -60,7 +61,14 @@ namespace edaa
         bool dlss_reactive_mask = false; // DLSS/XeSS: current frame where transparents were drawn (reactive mask)
         float dlss_reactive_strength = 1.0f; // its scale, 0..2
         float dlss_reactive_threshold = 0.75f; // share of the pixel the transparents must change to count, 0..0.95
+        int dlss_exposure_mode = 0; // DLAA exposure: 0 estimated by DLSS, 1 fixed (dlss_exposure), 2 Elite's own (exposure.hpp; dlss_exposure when not found)
+        float dlss_exposure = 10.0f; // fixed DLAA exposure, multiplier of the HDR scene values (10 looked best in game, 11.11.)
+        float dlss_exposure_scale = 1.0f; // dlss_exposure_mode 2: Elite's exposure times this
+        float dlss_sharpness = 0.0f; // DLAA: sharpening of its output 0..1 (ps_sharpen_hdr), 0 = off
         int dlss_preset = 0; // DLSS model: 0 = NVIDIA's default (K for DLAA), else NVSDK_NGX_DLSS_Hint_Render_Preset (J 10, K 11, L 12, M 13)
+        bool record_full_frame = false; // developer: recorder.cpp records the whole frame instead of the 1600x900 centre
+        int record_max_mb = 4096; // developer: memory a recording may use before it stops
+        float record_delay_s = 0.0f; // developer: seconds between Ctrl+Shift+R and the start of a recording (time to get moving)
         float mip_bias_extra = 0; // developer, not saved: added to the upscaling mip bias
         bool upscaler_jitter_flip = false; // developer, not saved: negate the jitter passed to DLSS/XeSS (sign convention check)
         bool jitter_enabled = true; // follows taa_enabled unless changed in developer builds
@@ -78,9 +86,12 @@ namespace edaa
         float taa_clip_gamma_static = 5.0f; // clip box for still pixels (larger = less flicker)
         bool map_detect_no_shadows = true; // also treat frames without sun shadow pass as a map
         bool taa_before_hud = true; // resolve before the HUD pass: HUD/holograms not anti-aliased, no ghosting
+        bool aa_ship_steady = false; // anti-aliasing: the player's own ship (automatic detection, aa_ship_distance) moves with the camera, not with the world
+        float aa_ship_distance = 0.0f; // aa_ship_steady: closer than this (m) counts as the own ship too, 0 = only the automatic detection
         bool hud_motion = false; // upscaling: the cockpit HUD (HUD mask) gets the vehicle's motion vectors, not the world's behind it
         bool hud_learn = false; // find the cockpit HUD shader by the HUD panel textures it reads (shader replaced, e.g. EDHM)
         bool taa_soft_offscreen = true; // reuse the edge of the history for pixels entering the screen
+        bool taa_sharp = false; // sharper native TAA: samples near the pixel centre count more, output sharpened 0.6 (docs/replay.md study)
         float taa_hdr_scale = 30.0f; // scene values are multiplied by this before the HDR compression c/(1+c) (30: chosen in game)
 
         bool motion_enabled = true;
@@ -387,6 +398,10 @@ namespace edaa
 
     // Overlay window registered with ReShade.
     void draw_overlay(reshade::api::effect_runtime* runtime);
+
+    // Developer builds: the recorder's line over the game (reshade_overlay event,
+    // also while the overlay is closed).
+    void draw_recorder_osd(reshade::api::effect_runtime* runtime);
 
     const char* to_string(frame_mode mode);
 }

@@ -7,8 +7,13 @@ public enum QuickMode { DlaaFg, Dlaa, TaaFg, Off }
 
 public enum SettingKind { Toggle, Whole, Real, Choice }
 
+// Expert: TAA tuning and game fixes, shown only with --dev (their defaults fit). Linked: keys that
+// one switch sets together (all on = on).
 public sealed record AddonSetting(string Group, string Key, string Label, string Hint, SettingKind Kind, string Default,
-    double Min = 0, double Max = 1, (string Value, string Text)[]? Choices = null);
+    double Min = 0, double Max = 1, (string Value, string Text)[]? Choices = null, bool Expert = false, string[]? Linked = null)
+{
+    public IEnumerable<string> Keys => Linked is null ? [Key] : Linked.Prepend(Key);
+}
 
 // The add-on's [EDAA] values in ReShade.ini. ReShade rewrites the file while Elite runs, so these
 // are only changed while the game is closed; the add-on reads them at the next start.
@@ -16,35 +21,64 @@ public static class AddonSettings
 {
     public const string Section = "EDAA";
 
+    // AMD build: without DLSS and DLSS-G (edaa/docs/vendors.md).
+    public static readonly (string Value, string Text)[] Methods = [
+        ("0", "EDAA TAA"), .. (Vendor.Nvidia ? new[] { ("1", "NVIDIA DLSS") } : Array.Empty<(string, string)>()), ("2", "Intel XeSS"),
+    ];
+
+    public static readonly (string Value, string Text)[] DlaaExposure = [
+        ("0", "DLSS schätzt selbst"), ("1", "Fest"), ("2", "Von Elite (experimentell)"),
+    ];
+
     public static readonly (string Value, string Text)[] DlaaModels = [
         ("0", "NVIDIA-Standard"), ("10", "J"), ("11", "K"), ("12", "L"), ("13", "M"),
     ];
 
+    // App started with --dev: the expert values are shown too.
+    public static readonly bool Developer = Environment.GetCommandLineArgs().Skip(1).Any(a => a.Equals("--dev", StringComparison.OrdinalIgnoreCase));
+
+    // What the settings page shows.
+    public static AddonSetting[] Shown => All.Where(s => !s.Expert || Developer).ToArray();
+
+    // Every key with its default ("Auf Standard" resets the hidden ones too).
+    public static Dictionary<string, string> Defaults() =>
+        All.SelectMany(s => s.Keys.Select(k => (k, s.Default))).ToDictionary(p => p.k, p => p.Default);
+
     // The values worth changing. Defaults as in docs/plan.md, ranges as the overlay's sliders.
-    public static readonly AddonSetting[] All = [
+    public static AddonSetting[] All => AllSettings.Where(s => Vendor.Nvidia || !s.Key.StartsWith("fg_") && s.Key is not ("dlss_preset" or "dlss_sharpness"))
+        .Select(s => Vendor.Amd && s.Key == "aa_method" ? s with { Default = "0" } : s).ToArray();
+
+    static readonly AddonSetting[] AllSettings = [
         new("Frame Generation", "fg_hud_protect", "HUD ruhig halten", "Das Cockpit-HUD verschmiert nicht in generierten Bildern.", SettingKind.Toggle, "1"),
         new("Frame Generation", "fg_fps_limit", "Bildlimit (angezeigte FPS, 0 = aus)", "Knapp unter der Bildwiederholrate, zum Beispiel 140 bei 144 Hz. Keinen zweiten Limiter nutzen.", SettingKind.Whole, "140", 0, 360),
+        new("Kantenglättung", "aa_method", "Methode", "", SettingKind.Choice, "1", Choices: Methods),
+        new("Kantenglättung", "dlss_sharpness", "DLAA nachschärfen (0 = aus)", "Gibt Kanten und feinen Details nach DLAA etwas Kontrast zurück. 0.3 ist ein guter Start, zu viel macht Kanten hart und dunkle Flächen körnig. HUD und Hologramme werden nicht geschärft.", SettingKind.Real, "0", 0, 1),
         new("Kantenglättung", "dlss_preset", "DLAA-Modell", "Das Modell, das EDAA bei NVIDIA anfordert.", SettingKind.Choice, "11", Choices: DlaaModels),
+        new("Kantenglättung", "dlss_exposure_mode", "DLAA-Belichtung", "Von Elite: DLAA bekommt Elites eigene Belichtung, ruhiger in sehr dunklen und grellen Szenen (experimentell). Fest: der Wert darunter.", SettingKind.Choice, "0", Choices: DlaaExposure),
+        new("Kantenglättung", "dlss_exposure", "Feste DLAA-Belichtung", "Bei „Fest“, und bei „Von Elite“, solange Elites Wert nicht gefunden ist. 10 sah im Test am besten aus.", SettingKind.Real, "10", 0.1, 100),
+        new("Kantenglättung", "aa_ship_steady", "Eigenes Schiff ruhig halten", "Rumpf und Vorbau bleiben beim Drehen scharf (alle Methoden, auch Frame Generation). Das Schiff wird beim Fliegen automatisch erkannt. Schmiert draußen etwas, wieder ausschalten.", SettingKind.Toggle, "0"),
+        new("Kantenglättung", "aa_ship_distance", "Eigenes Schiff bis (m)", "Nur mit „Eigenes Schiff ruhig halten“. 0 = nur automatisch erkennen. Flimmert der Außenrumpf noch, etwa die sichtbare Schiffslänge, z. B. 95.", SettingKind.Real, "0", 0, 150),
         new("Kantenglättung", "taa_before_hud", "Vor dem HUD glätten", "An: FG-HUD-Schutz voll, das HUD bleibt aber ungeglättet. Aus: HUD geglättet, FG-HUD-Schutz schwächer.", SettingKind.Toggle, "1"),
         new("Kantenglättung", "hud_learn", "Cockpit-HUD an den Panel-Texturen erkennen", "Nötig, wenn EDHM die HUD-Shader ersetzt: sonst wirken HUD-Maske und FG-HUD-Schutz nicht.", SettingKind.Toggle, "1"),
         new("Kantenglättung", "hud_motion", "Cockpit-HUD bewegt sich mit dem Cockpit", "Panels bleiben bei Kopf- und Schiffsbewegung scharf. Wirkt nur beim Hochskalieren (unter 1,0).", SettingKind.Toggle, "1"),
         new("Hochskalieren (nur unter 1,0 Supersampling)", "game_upscale", "Hochskalieren dem Spiel überlassen", "", SettingKind.Toggle, "0"),
         new("Hochskalieren (nur unter 1,0 Supersampling)", "upscale_sharpness", "Schärfe bei TAA-Hochskalierung", "", SettingKind.Real, "0.5", 0, 1),
         new("Hochskalieren (nur unter 1,0 Supersampling)", "upscale_hud_mask", "HUD ohne Nachzieher", "", SettingKind.Toggle, "1"),
-        new("Hochskalieren (nur unter 1,0 Supersampling)", "upscale_mip_bias", "Texturen in Ausgabeauflösung", "", SettingKind.Toggle, "1"),
-        new("TAA", "taa_history_weight", "Anteil der Vorbilder", "Mehr ist ruhiger, aber unschärfer.", SettingKind.Real, "0.93", 0.5, 0.98),
-        new("TAA", "taa_history_weight_motion", "Anteil der Vorbilder bei Bewegung", "Weniger gibt weniger Nachzieher, aber mehr Treppenstufen.", SettingKind.Real, "0.9", 0.3, 0.95),
-        new("TAA", "taa_history_weight_min", "Mindestanteil gegen Flimmern", "", SettingKind.Real, "0.95", 0.5, 0.95),
-        new("TAA", "taa_clip_gamma", "Clip-Box bei Bewegung", "", SettingKind.Real, "1.25", 0.5, 3),
-        new("TAA", "taa_clip_gamma_static", "Clip-Box im Stillstand", "Größer flimmert weniger.", SettingKind.Real, "5", 0.5, 5),
-        new("TAA", "taa_anti_flicker", "Flimmerschutz", "", SettingKind.Toggle, "1"),
-        new("TAA", "taa_soft_offscreen", "Weicher Bildrand", "", SettingKind.Toggle, "1"),
-        new("TAA", "taa_reconstruction", "Weichere Rekonstruktion", "", SettingKind.Toggle, "0"),
-        new("TAA", "taa_unjitter", "Ohne Jitter abtasten", "Weicheres Bild.", SettingKind.Toggle, "0"),
-        new("Korrekturen fürs Spiel", "fix_sun_shadows", "Sonnenschatten korrigieren", "", SettingKind.Toggle, "1"),
-        new("Korrekturen fürs Spiel", "vehicle_motion", "Bewegung des eigenen Fahrzeugs", "", SettingKind.Toggle, "1"),
-        new("Korrekturen fürs Spiel", "jitter_overlay_draws", "Decals und Lichter mitbewegen", "Sonst flimmern sie.", SettingKind.Toggle, "1"),
-        new("Korrekturen fürs Spiel", "map_detect_no_shadows", "Karten an fehlenden Schatten erkennen", "", SettingKind.Toggle, "1"),
+        new("Hochskalieren (nur unter 1,0 Supersampling)", "upscale_mip_bias", "Texturen in Ausgabeauflösung", "", SettingKind.Toggle, "1", Expert: true),
+        new("TAA", "taa_sharp", "Schärfere TAA", "Etwas schärferes Bild bei wenig mehr Flimmern (gemessen: Schärfe +6, bleibt ruhiger als DLAA).", SettingKind.Toggle, "0"),
+        new("TAA", "taa_history_weight", "Anteil der Vorbilder", "Mehr ist ruhiger, aber unschärfer.", SettingKind.Real, "0.93", 0.5, 0.98, Expert: true),
+        new("TAA", "taa_history_weight_motion", "Anteil der Vorbilder bei Bewegung", "Weniger gibt weniger Nachzieher, aber mehr Treppenstufen.", SettingKind.Real, "0.9", 0.3, 0.95, Expert: true),
+        new("TAA", "taa_history_weight_min", "Mindestanteil gegen Flimmern", "", SettingKind.Real, "0.95", 0.5, 0.95, Expert: true),
+        new("TAA", "taa_clip_gamma", "Clip-Box bei Bewegung", "", SettingKind.Real, "1.25", 0.5, 3, Expert: true),
+        new("TAA", "taa_clip_gamma_static", "Clip-Box im Stillstand", "Größer flimmert weniger.", SettingKind.Real, "5", 0.5, 5, Expert: true),
+        new("TAA", "taa_anti_flicker", "Flimmerschutz", "", SettingKind.Toggle, "1", Expert: true),
+        new("TAA", "taa_soft_offscreen", "Weicher Bildrand", "", SettingKind.Toggle, "1", Expert: true),
+        new("TAA", "taa_reconstruction", "Weichere Rekonstruktion", "", SettingKind.Toggle, "0", Expert: true),
+        new("TAA", "taa_unjitter", "Ohne Jitter abtasten", "Weicheres Bild.", SettingKind.Toggle, "0", Expert: true),
+        new("Korrekturen fürs Spiel", "fix_sun_shadows", "Sonnenschatten korrigieren", "", SettingKind.Toggle, "1", Expert: true),
+        new("Korrekturen fürs Spiel", "vehicle_motion", "Bewegung des eigenen Fahrzeugs", "", SettingKind.Toggle, "1", Expert: true),
+        new("Korrekturen fürs Spiel", "jitter_overlay_draws", "Decals und Lichter mitbewegen", "Sonst flimmern sie.", SettingKind.Toggle, "1", Expert: true),
+        new("Korrekturen fürs Spiel", "map_detect_no_shadows", "Karten an fehlenden Schatten erkennen", "", SettingKind.Toggle, "1", Expert: true),
     ];
 
     static string IniPath(GameInstall game) => Path.Combine(game.Folder, "ReShade.ini");

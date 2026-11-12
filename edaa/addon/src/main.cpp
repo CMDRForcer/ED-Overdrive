@@ -2,6 +2,7 @@
 
 #include "events.hpp"
 #include "gpu_profiler.hpp"
+#include "recorder.hpp"
 #include "state.hpp"
 
 #include <Windows.h>
@@ -45,7 +46,7 @@ namespace edaa
     {
         // Hotkeys: Ctrl+Shift+T toggles TAA (and jitter, saved), Ctrl+Shift+N
         // next test scene marker of the GPU timings log (-, A..E). Developer builds
-        // also: Ctrl+Shift+J jitter alone, Ctrl+Shift+M debug view, Ctrl+Shift+C capture,
+        // also: Ctrl+Shift+J jitter alone, Ctrl+Shift+M debug view, Ctrl+Shift+C capture, Ctrl+Shift+R recording,
         // Ctrl+Shift+Page Down / Page Up / Home pass cycler.
         void on_reshade_present(reshade::api::effect_runtime* runtime)
         {
@@ -80,6 +81,10 @@ namespace edaa
                 s.capture_requested = true;
             }
 
+            if (runtime->is_key_pressed('R')) {
+                recorder::toggle();
+            }
+
             // Pass cycler: Page Down / Page Up skip the next / previous shader, Home none.
             if (runtime->is_key_pressed(VK_NEXT)) {
                 cycle_pass(1);
@@ -95,7 +100,7 @@ namespace edaa
 
             if (runtime->is_key_pressed('M')) {
                 const std::lock_guard<std::recursive_mutex> lock(s.mutex);
-                s.config.debug = (s.config.debug + 1) % (static_cast<int>(debug_view::reactive) + 1);
+                s.config.debug = (s.config.debug + 1) % (static_cast<int>(debug_view::ship_auto) + 1);
             }
 #endif
         }
@@ -126,6 +131,9 @@ BOOL APIENTRY DllMain(HMODULE module, DWORD reason, LPVOID)
             edaa::register_fg_events();
             reshade::register_event<reshade::addon_event::reshade_present>(edaa::on_reshade_present);
             reshade::register_overlay("EDAA", edaa::draw_overlay);
+#if EDAA_DEVELOPER
+            reshade::register_event<reshade::addon_event::reshade_overlay>(edaa::draw_recorder_osd);
+#endif
             {
                 char msg[160];
                 snprintf(msg, sizeof(msg), "EDAA: loaded, version %s, build %s", edaa::version, edaa::build_stamp);
@@ -133,6 +141,9 @@ BOOL APIENTRY DllMain(HMODULE module, DWORD reason, LPVOID)
             }
             break;
         case DLL_PROCESS_DETACH:
+#if EDAA_DEVELOPER
+            reshade::unregister_event<reshade::addon_event::reshade_overlay>(edaa::draw_recorder_osd);
+#endif
             reshade::unregister_overlay("EDAA", edaa::draw_overlay);
             reshade::unregister_event<reshade::addon_event::reshade_present>(edaa::on_reshade_present);
             edaa::unregister_fg_events();

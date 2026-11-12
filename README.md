@@ -4,7 +4,7 @@ Einrichtungs-Programm für **Elite Dangerous Odyssey** (DX11): installiert und p
 [EDAA](edaa) – Kantenglättung (NVIDIA DLAA, Intel XeSS, TAA) und echte
 **DLSS Frame Generation** – samt ReShade, Filter-Set und optional **DLSS 5** (GITC Uplift).
 
-Eine Datei, keine Installation: `ED-Overdrive.exe` aus den [Releases](https://github.com/CMDRForcer/ED-Overdrive/releases)
+Eine Datei, keine Installation: `ED-Overdrive-NVIDIA.exe` aus den [Releases](https://github.com/CMDRForcer/ED-Overdrive/releases)
 herunterladen und starten. Die App bringt .NET mit.
 
 ## Was mitgeliefert wird und was nicht
@@ -69,13 +69,13 @@ Die unsignierten Builds sind von NVIDIAs Datei abgeleitet und nicht von NVIDIA f
 | DLSS 5 | GITC Uplift installieren, DLL wählen, optimieren, entfernen |
 | Elite-Check | prüft Einstellungen, die mit EDAA kollidieren (Supersampling, CAS, Checkerboard …) |
 | Presets | FG-Preset im NVIDIA-Treiberprofil von Elite (nur auf Knopfdruck, mit Backup) |
-| Einstellungen | EDAA-Werte aus `ReShade.ini` |
+| Einstellungen | die EDAA-Werte, die Spieler brauchen; mit `--dev` gestartet auch die Feinwerte |
 | Diagnose | packt Logs, Einstellungen und einen Prüfbericht in ein Zip zum Weitergeben (ohne Journale) |
 | Backups | alle Backups ansehen und wiederherstellen |
 
 ## Hinweise
 
-- Im EDAA-Overlay **„Resolve before the HUD pass“** anlassen. DLSS 5 braucht EDAAs Kantenglättung mit NVIDIA DLSS.
+- Im EDAA-Overlay unter „Advanced settings“ **„Resolve before the HUD pass“** anlassen. DLSS 5 braucht EDAAs Kantenglättung mit NVIDIA DLSS.
 - Nur **ein** Bildlimit nutzen: das von EDAA (knapp unter der Bildwiederholrate, z. B. 140 bei 144 Hz).
 - EDHM/3DMigoto wird unterstützt. RenoDX mit Frame Generation gibt ein schwarzes Bild: im Overlay unter „Add-ons“ abschalten.
 - Die App schreibt nie in die Registry. Einzige Ausnahme ist die Seite „Presets“, nur auf Knopfdruck und mit Backup.
@@ -112,13 +112,13 @@ cd ED-Overdrive
    ```
    dotnet publish app/GenFrame.Setup.csproj -p:PublishProfile=Release
    ```
-   Ergebnis: `app/bin/publish/ED-Overdrive.exe`. Vor dem Bauen holt `app/ThirdParty/fetch-bundle.ps1` den
+   Ergebnis: `app/bin/publish/ED-Overdrive-NVIDIA.exe`. Vor dem Bauen holt `app/ThirdParty/fetch-bundle.ps1` den
    ReShade-Installer (per SHA-256 geprüft) und packt EDAA aus `edaa/build/Release` in `app/ThirdParty/EDAA.zip`.
    Liegt dort schon eine `EDAA.zip`, bleibt sie; zum Erneuern löschen.
 
 GitHub Actions baut bei jedem Push und Pull Request Add-on und App (`.github/workflows/build.yml`) und legt das
 Add-on von `main` in den Zweig `builds/main` (Kanal „Entwicklung“). Ein veröffentlichtes Release baut beides neu
-und hängt `ED-Overdrive.exe` und `EDAA-<version>.zip` an (`.github/workflows/release.yml`). Die EDAA-Version
+und hängt `ED-Overdrive-NVIDIA.exe` und `EDAA-<version>.zip` an (`.github/workflows/release.yml`). Die EDAA-Version
 steht in `edaa/VERSION`.
 
 ## Lizenz
