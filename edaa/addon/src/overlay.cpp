@@ -258,6 +258,28 @@ namespace edaa
                 ImGui::TextDisabled("0 = found automatically");
             }
 
+            // Glint stabiliser (ps_spec_stable) after DLAA / XeSS / FSR at native resolution.
+            if (s.config.aa_method != static_cast<int>(aa_method::taa)) {
+                edit(ImGui::Checkbox("Calm blinking glints (after DLSS / XeSS / FSR)", &s.config.spec_stable));
+
+                if (ImGui::IsItemHovered()) {
+                    ImGui::SetTooltip("Glints on metal and edges that blink from frame to frame are blended with the last frame.\n"
+                                      "Only on glints, limited to what is around them. Stars, engines and lights are left alone.\n"
+                                      "Not with upscaling.");
+                }
+
+                if (s.config.spec_stable) {
+                    ImGui::SetNextItemWidth(ImGui::GetFontSize() * 12);
+                    edit(ImGui::SliderFloat("Glint calming strength", &s.config.spec_stable_strength, 0.0f, 1.0f, "%.2f"));
+#if EDAA_DEVELOPER
+                    ImGui::SetNextItemWidth(ImGui::GetFontSize() * 12);
+                    edit(ImGui::SliderFloat("Glint contrast", &s.config.spec_stable_contrast, 0.0f, 0.3f, "%.3f"));
+                    ImGui::SetNextItemWidth(ImGui::GetFontSize() * 12);
+                    edit(ImGui::SliderFloat("Glint clip box (std dev)", &s.config.spec_stable_clip, 0.0f, 4.0f, "%.2f"));
+#endif
+                }
+            }
+
             draw_upscaling(s, edit);
 
             if (s.map_mode) {

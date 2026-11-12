@@ -236,6 +236,65 @@ float4 ps_taa(float4 pos : SV_Position) : SV_Target
 }
 
 
+// Glint stabiliser (spec_stable), after DLAA / XeSS / FSR: the neural AA keeps
+// thin glints sharp, so they still blink from frame to frame. Where this
+// frame's output (t0) or the previous stabilised output (t1, moved along the
+// motion vectors t2) is clearly brighter than this frame's 3x3 neighbourhood,
+// the two are blended: the previous one, limited to the neighbourhood's range
+// (no trails where the glint really moved away), counts up to 'strength'.
+// Elsewhere the output passes through. Left alone: sky (t3 depth 0) and
+// transparents (t4 reactive mask, unbound = 0). Writes the next history.
+// sharpen.x: strength 0..1, sharpen.y: glint contrast (compressed HDR),
+// sharpen.z: clip box in standard deviations; blend.z: reset.
+float3 ps_spec_stable(float4 pos : SV_Position) : SV_Target
+{
+    const int2 p = int2(pos.xy);
+    const int2 last = int2(render_size.xy) - 1;
+    const float3 raw = scene_color.Load(int3(p, 0));
+    const float3 c = tonemap(raw);
+    const float lc = max(c.r, max(c.g, c.b));
+    float3 m1 = 0, m2 = 0, box_min = 1e9, box_max = -1e9;
+    float around = 0;
+
+    // clang-format off
+    [unroll] for (int y = -1; y <= 1; ++y) {
+        [unroll] for (int x = -1; x <= 1; ++x) {
+            const float3 n = tonemap(scene_color.Load(int3(clamp(p + int2(x, y), int2(0, 0), last), 0)));
+            m1 += n;
+            m2 += n * n;
+            box_min = min(box_min, n);
+            box_max = max(box_max, n);
+            around += x != 0 || y != 0 ? max(n.r, max(n.g, n.b)) : 0;
+        }
+    }
+    // clang-format on
+
+    around /= 8;
+    const float2 history_uv = (pos.xy * render_size.zw) + motion_tex.Load(int3(p, 0));
+    const bool gate = scene_depth.Load(int3(p, 0)) > 0 && hud_mask_tex.Load(int3(p, 0)) < 0.1;
+
+    if (blend.z > 0 || !gate || sharpen.x <= 0 || any(history_uv < 0) || any(history_uv > 1)) {
+        return raw;
+    }
+
+    const float3 prev = tonemap(history_tex.SampleLevel(linear_clamp, history_uv, 0).rgb);
+    const float lp = max(prev.r, max(prev.g, prev.b));
+    // Glint now, or a glint last frame that is gone now.
+    const float t = max(sharpen.y, 1e-3);
+    const float glint = saturate((max(lc, lp) - around - t) / t);
+
+    if (glint <= 0) {
+        return raw;
+    }
+
+    const float3 mean = m1 / 9;
+    const float3 sigma = sqrt(max(m2 / 9 - mean * mean, 0));
+    const float3 kept = clamp(prev, min(box_min, mean - sharpen.z * sigma), max(box_max, mean + sharpen.z * sigma));
+    const float3 result = lerp(c, kept, sharpen.x * glint);
+    return untonemap(clamp(result, 0, 0.99999));
+}
+
+
 // Temporal upscaling (Upscaling = EDAA TAA): the game's tonemapped image at
 // render size (t0, LDR, jittered), the display-size history (t1), motion
 // vectors and depth at render size (t2, t3) and the HUD mask (t4) give the

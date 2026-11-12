@@ -94,7 +94,7 @@ namespace edaa
         {
             ID3D11Device* device = nullptr; // not owned
             ComPtr<ID3D11VertexShader> vs;
-            ComPtr<ID3D11PixelShader> ps_motion, ps_debug, ps_taa, ps_copy, ps_hud_mask, ps_taau, ps_sharpen, ps_sharpen_hdr, ps_fg_motion, ps_hud_motion, ps_fg_motion_keep, ps_reactive, ps_ship_auto, ps_exposure;
+            ComPtr<ID3D11PixelShader> ps_motion, ps_debug, ps_taa, ps_copy, ps_hud_mask, ps_taau, ps_sharpen, ps_sharpen_hdr, ps_fg_motion, ps_hud_motion, ps_fg_motion_keep, ps_reactive, ps_ship_auto, ps_exposure, ps_spec_stable;
             ComPtr<ID3D11Buffer> motion_cb, taa_cb, object_cb, exposure_cb;
             ComPtr<ID3D11SamplerState> linear_clamp;
             ComPtr<ID3D11BlendState> max_blend; // HUD mask accumulation
@@ -111,6 +111,9 @@ namespace edaa
             target reactive_snapshot; // scene right before the first transparent draw
             target reactive; // R8 reactive mask (ps_reactive)
             target dlss_mask; // R8 max(HUD mask, reactive mask) given to DLSS / XeSS
+            target stable[2]; // glint stabiliser history (ps_spec_stable): [stable_index] = last output
+            int stable_index = 0;
+            bool stable_valid = false;
             target ship_score[2], ship_depth[2]; // automatic ship detection (ps_ship_auto): [ship_index] = this frame
             int ship_index = 0;
             bool ship_valid = false; // [ship_index] holds a score
@@ -261,6 +264,7 @@ namespace edaa
                 SUCCEEDED(device->CreatePixelShader(g_ps_reactive, sizeof(g_ps_reactive), nullptr, &gpu.ps_reactive)) &&
                 SUCCEEDED(device->CreatePixelShader(g_ps_ship_auto, sizeof(g_ps_ship_auto), nullptr, &gpu.ps_ship_auto)) &&
                 SUCCEEDED(device->CreatePixelShader(g_ps_exposure, sizeof(g_ps_exposure), nullptr, &gpu.ps_exposure)) &&
+                SUCCEEDED(device->CreatePixelShader(g_ps_spec_stable, sizeof(g_ps_spec_stable), nullptr, &gpu.ps_spec_stable)) &&
                 SUCCEEDED(device->CreateSamplerState(&sampler, &gpu.linear_clamp)) &&
                 SUCCEEDED(device->CreateBlendState(&max_blend, &gpu.max_blend)) &&
                 create_buffer(sizeof(motion_constants), gpu.motion_cb) &&
@@ -323,6 +327,9 @@ namespace edaa
             gpu.reactive_snapshot = {};
             gpu.reactive = {};
             gpu.dlss_mask = {};
+            gpu.stable[0] = {};
+            gpu.stable[1] = {};
+            gpu.stable_valid = false;
 
             for (int i = 0; i < 2; ++i) {
                 gpu.ship_score[i] = {};
@@ -943,6 +950,43 @@ namespace edaa
                 return false;
             }
 
+            // Glint stabiliser (ps_spec_stable): the output's blinking glints blended with the last
+            // stabilised frame, into its own history (never into the upscaler's).
+            ID3D11ShaderResourceView* result = gpu.upscaler_output.srv.Get();
+            bind_fullscreen(ctx);
+            set_viewport(ctx, static_cast<float>(in.render_w), static_cast<float>(in.render_h));
+
+            if (in.config.spec_stable && in.config.spec_stable_strength > 0 && gpu.ps_spec_stable &&
+                (has_size(gpu.stable[1], in.render_w, in.render_h) ||
+                    (create_target(gpu.color_format, gpu.stable[0]) && create_target(gpu.color_format, gpu.stable[1])))) {
+                const gpu_profiler::scope timed(ctx, gpu_profiler::taa);
+                taa_constants sc = {};
+                fill_taa_constants(sc, in.config, in.render_w, in.render_h, 0, 0, u.reset || !gpu.stable_valid);
+                sc.sharpen[0] = std::min(in.config.spec_stable_strength, 1.0f);
+                sc.sharpen[1] = std::max(in.config.spec_stable_contrast, 0.0f);
+                sc.sharpen[2] = std::max(in.config.spec_stable_clip, 0.0f);
+
+                if (upload(ctx, gpu.taa_cb.Get(), sc)) {
+                    const target& next = gpu.stable[1 - gpu.stable_index];
+                    bind_srvs(ctx, {});
+                    ID3D11RenderTargetView* const stable_target[] = { next.rtv.Get() };
+                    ctx->OMSetRenderTargets(1, stable_target, nullptr);
+                    ID3D11Buffer* const cb[] = { gpu.taa_cb.Get() };
+                    ctx->PSSetConstantBuffers(0, 1, cb);
+                    bind_srvs(ctx, { result, gpu.stable[gpu.stable_index].srv.Get(), gpu.motion.srv.Get(), gpu.depth.srv.Get(),
+                                       reactive_ready ? gpu.reactive.srv.Get() : nullptr });
+                    ctx->PSSetShader(gpu.ps_spec_stable.Get(), nullptr, 0);
+                    ctx->Draw(3, 0);
+                    bind_srvs(ctx, {});
+                    gpu.stable_index = 1 - gpu.stable_index;
+                    gpu.stable_valid = true;
+                    result = next.srv.Get();
+                }
+            }
+            else {
+                gpu.stable_valid = false;
+            }
+
             // Copy back into the game's scene target (NGX keeps our pipeline state, XeSS runs on D3D12),
             // for DLAA sharpened when asked (DLSS keeps its own history: the sharpened copy is not fed back).
             const bool sharpen = method == aa_method::dlaa && in.config.dlss_sharpness > 0;
@@ -964,7 +1008,7 @@ namespace edaa
             set_viewport(ctx, static_cast<float>(in.render_w), static_cast<float>(in.render_h));
             ID3D11RenderTargetView* const scene_target[] = { gpu.color.rtv.Get() };
             ctx->OMSetRenderTargets(1, scene_target, nullptr);
-            bind_srvs(ctx, { nullptr, gpu.upscaler_output.srv.Get() });
+            bind_srvs(ctx, { nullptr, result });
             ctx->PSSetShader(sharpen ? gpu.ps_sharpen_hdr.Get() : gpu.ps_copy.Get(), nullptr, 0);
             ctx->Draw(3, 0);
             return true;

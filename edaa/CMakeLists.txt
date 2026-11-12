@@ -45,7 +45,8 @@ add_custom_command(
 	COMMAND ${FXC} /nologo /O3 /T ps_5_0 /E ps_fg_motion /Vn g_ps_fg_motion /Fh ${SHADER_OUT}/ps_fg_motion.h ${TAA_SRC}
 	COMMAND ${FXC} /nologo /O3 /T ps_5_0 /E ps_fg_motion_keep /Vn g_ps_fg_motion_keep /Fh ${SHADER_OUT}/ps_fg_motion_keep.h ${TAA_SRC}
 	COMMAND ${FXC} /nologo /O3 /T ps_5_0 /E ps_reactive /Vn g_ps_reactive /Fh ${SHADER_OUT}/ps_reactive.h ${TAA_SRC}
-	COMMAND ${CMAKE_COMMAND} -DOUT=${TAA_HEADER} -DHEADERS=ps_taa.h,ps_copy.h,ps_hud_mask.h,ps_taau.h,ps_sharpen.h,ps_sharpen_hdr.h,ps_fg_motion.h,ps_fg_motion_keep.h,ps_reactive.h -P ${CMAKE_SOURCE_DIR}/addon/shaders/combine.cmake
+	COMMAND ${FXC} /nologo /O3 /T ps_5_0 /E ps_spec_stable /Vn g_ps_spec_stable /Fh ${SHADER_OUT}/ps_spec_stable.h ${TAA_SRC}
+	COMMAND ${CMAKE_COMMAND} -DOUT=${TAA_HEADER} -DHEADERS=ps_taa.h,ps_copy.h,ps_hud_mask.h,ps_taau.h,ps_sharpen.h,ps_sharpen_hdr.h,ps_fg_motion.h,ps_fg_motion_keep.h,ps_reactive.h,ps_spec_stable.h -P ${CMAKE_SOURCE_DIR}/addon/shaders/combine.cmake
 	DEPENDS ${TAA_SRC} ${CMAKE_SOURCE_DIR}/addon/shaders/combine.cmake
 	COMMENT "Compiling taa.hlsl"
 )
